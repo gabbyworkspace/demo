@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ReSystem Prototypes</title>
+<meta name="description" content="Working prototypes of REAI, reConcierge and 4EDU Academy. Sample data, no backend.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F3F1EC;--card:#FFFFFF;--fg:#15171A;--sec:#545A61;--hair:rgba(21,23,26,.10);--accent:#2F5D50;--tag:#E8EEEA;
+ --sans:"Manrope",-apple-system,"SF Pro Text",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;color-scheme:light;
+ padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121416;--card:#1B1E21;--fg:#ECEEF0;--sec:#A3AAB1;--hair:rgba(236,238,240,.10);--accent:#8CC7B4;--tag:#1F2B27;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121416;--card:#1B1E21;--fg:#ECEEF0;--sec:#A3AAB1;--hair:rgba(236,238,240,.10);--accent:#8CC7B4;--tag:#1F2B27;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.5}
+.wrap{max-width:880px;margin:0 auto;padding-inline:20px;padding-block:48px 64px}
+header h1{font-size:clamp(28px,5vw,40px);line-height:1.1;letter-spacing:-.5px;margin:0 0 10px;text-wrap:balance}
+header p{color:var(--sec);margin:0;max-width:60ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px;margin-top:32px}
+a.card{display:flex;flex-direction:column;gap:10px;background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:20px;color:inherit;text-decoration:none;transition:border-color .15s,transform .15s;min-width:0}
+a.card:hover,a.card:focus-visible{border-color:var(--accent);transform:translateY(-2px)}
+a.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tag{align-self:flex-start;font-size:11.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--accent);background:var(--tag);border-radius:999px;padding:4px 10px}
+.card h2{font-size:19px;margin:0;letter-spacing:-.2px}
+.card p{margin:0;color:var(--sec);font-size:14px}
+.card .path{margin-top:auto;font-family:var(--mono);font-size:12.5px;color:var(--sec)}
+.note{margin-top:32px;border-top:1px solid var(--hair);padding-top:20px;font-size:13.5px;color:var(--sec)}
+.note b{color:var(--fg)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ReSystem prototypes</h1>
+    <p>Interactive prototypes of three separate products. Everything runs in the browser with sample data; nothing is booked, paid or stored on a server.</p>
+  </header>
+  <main class="grid">
+    <a class="card" href="reai/">
+      <span class="tag">REAI</span>
+      <h2>REAI</h2>
+      <p>Consumer app: one Master helper line plus nine vertical helpers.</p>
+      <span class="path">/reai/</span>
+    </a>
+    <a class="card" href="reconcierge/iphone/">
+      <span class="tag">reConcierge</span>
+      <h2>iPhone Prototype 003 r3</h2>
+      <p>Mr. Wolf, Master Concierge, working rooms, Seal approval. CP-2 regression candidate.</p>
+      <span class="path">/reconcierge/iphone/</span>
+    </a>
+    <a class="card" href="reconcierge/desktop/">
+      <span class="tag">reConcierge</span>
+      <h2>Desktop Prototype 001 r3</h2>
+      <p>Desktop layout of the same flows, with Activity table and Inside reConcierge map.</p>
+      <span class="path">/reconcierge/desktop/</span>
+    </a>
+    <a class="card" href="4edu/">
+      <span class="tag">4EDU</span>
+      <h2>4EDU Academy</h2>
+      <p>Learning platform prototype (Italian UI): faculties, courses, lessons and degrees.</p>
+      <span class="path">/4edu/</span>
+    </a>
+  </main>
+  <p class="note"><b>Status:</b> prototypes, not production releases. REAI's live helper answers need its server (<code>/api/ai</code>), which is not part of this site, so helper requests show an error here. No gate has certified any of these builds.</p>
+</div>
+</body>
+</html>

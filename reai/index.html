@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>REAI</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0a84ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="/icon.svg">
+<style>
+:root{
+  --bg:#fbfbfd; --surface:#ffffff; --ink:#1d1d1f; --ink-2:#5c5c61; --ink-3:#aeaeb2;
+  --line:#e5e5ea; --accent:#0a84ff; --accent-ink:#ffffff; --good:#2a8a3e; --field:#f2f2f7; --group:#f2f2f7;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 12px 40px rgba(0,0,0,.06); --fs:17px;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#000000; --surface:#1c1c1e; --ink:#f5f5f7; --ink-2:#a1a1a6; --ink-3:#636366; --line:#2c2c2e; --field:#1c1c1e; --group:#000;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 40px rgba(0,0,0,.5);
+}}
+:root[data-theme="dark"]{
+  --bg:#000000; --surface:#1c1c1e; --ink:#f5f5f7; --ink-2:#a1a1a6; --ink-3:#636366; --line:#2c2c2e; --field:#1c1c1e; --group:#000;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 40px rgba(0,0,0,.5);
+}
+:root[data-text="large"]{--fs:21px}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box}
+body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-size:var(--fs);line-height:1.45;letter-spacing:-.01em;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+input{font:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid rgba(10,132,255,.45);outline-offset:2px}
+h2{font-size:1.35em;font-weight:600;letter-spacing:-.02em;margin:0 0 4px;line-height:1.2}
+.sub{color:var(--ink-2);font-size:.88em;margin:0 0 14px}
+
+/* header */
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:grid;grid-template-columns:48px 1fr 48px;align-items:center;height:56px;padding:0 8px;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px)}
+.hdr .logo{justify-self:center;display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink)}
+.mark{width:32px;height:32px;border-radius:9px;background:var(--accent);display:grid;place-items:center}
+.mark svg{width:19px;height:19px}
+.hdr .name{font-size:16px;font-weight:600;letter-spacing:-.02em}
+.ib{width:44px;height:44px;border-radius:999px;display:grid;place-items:center;color:var(--ink)}
+.ib svg{width:22px;height:22px}
+
+.app{max-width:680px;margin:0 auto;padding:12px 20px 56px}
+
+/* choices & chips */
+.choices{display:flex;flex-direction:column;gap:10px}
+.choice{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:13px 16px;box-shadow:var(--shadow);transition:border-color .15s}
+.choice.on{border-color:var(--accent)}
+.choice .ic{width:38px;height:38px;border-radius:11px;background:var(--field);display:grid;place-items:center;color:var(--accent);flex:none}
+.choice .ic svg{width:20px;height:20px}
+.choice .t{flex:1;min-width:0}.choice .t b{display:block;font-weight:600}.choice .t span{color:var(--ink-2);font-size:.85em}
+.chk{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);flex:none;display:grid;place-items:center}
+.on .chk{background:var(--accent);border-color:var(--accent)}
+.on .chk::after{content:"";width:6px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.detail{margin-top:10px}
+.txt{width:100%;background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:13px 16px;color:var(--ink)}
+.txt::placeholder{color:var(--ink-3)}
+.gps{font-size:.85em;color:var(--ink-2);margin-top:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;padding:9px 15px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-size:.9em}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+.chip.add{border-style:dashed;background:transparent;color:var(--accent)}
+.field{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:5px 5px 5px 18px;box-shadow:var(--shadow)}
+.field:focus-within{border-color:rgba(10,132,255,.5)}
+.field input{flex:1;min-width:0;border:0;background:none;color:var(--ink);padding:10px 0;font-size:1.02em}
+.field input::placeholder{color:var(--ink-3)}
+.rb{width:44px;height:44px;border-radius:999px;display:grid;place-items:center;background:var(--field);color:var(--ink);flex:none}
+.rb svg{width:20px;height:20px}
+.rb.go{background:var(--accent);color:#fff}
+.rb.go:disabled{background:var(--line);color:var(--ink-3)}
+.rb.mic.on{background:#ff3b30;color:#fff;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,48,.45)}50%{box-shadow:0 0 0 10px rgba(255,59,48,0)}}
+.hint{font-size:.8em;color:var(--ink-3);margin:8px 4px 0;text-align:right}
+.primary{width:100%;min-height:52px;border-radius:999px;background:var(--accent);color:#fff;font-weight:600;font-size:1em}
+.primary:disabled{background:var(--line);color:var(--ink-3)}
+.ghost{width:100%;min-height:44px;color:var(--ink-2);font-size:.9em}
+.link{color:var(--accent);font-weight:500;font-size:.9em}
+.step{margin-top:28px;animation:rise .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.bottom{margin-top:28px;display:flex;flex-direction:column;gap:8px}
+
+/* steps layout */
+.stepbar{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.stepbar .n{font-size:.85em;font-weight:600;color:var(--ink-2)}
+.prog{display:flex;gap:6px;margin:14px 0 24px}
+.prog i{flex:1;height:4px;border-radius:2px;background:var(--line)}.prog i.on{background:var(--accent)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tile{min-height:88px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;text-align:left;padding:14px;border-radius:18px;border:1.5px solid var(--line);background:var(--surface);box-shadow:var(--shadow);font-weight:600}
+.tile.on{border-color:var(--accent)}
+.tile.add{border-style:dashed;background:transparent;color:var(--accent)}
+.ctxline{font-size:.85em;color:var(--ink-2);text-align:center}
+
+/* card layout */
+.sumcard{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;margin-top:6px}
+.srow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 16px;min-height:48px}
+.srow+.srow{border-top:1px solid var(--line)}
+.srow .k{width:5.2em;font-size:.8em;color:var(--ink-2);flex:none}
+.srow .v{flex:1;min-width:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow .v.empty{color:var(--ink-3);font-weight:400}
+.srow.cur{background:color-mix(in srgb,var(--accent) 8%,var(--surface))}.srow.cur .k{color:var(--accent);font-weight:600}
+.srow svg{width:14px;height:14px;color:var(--ink-3);flex:none}
+
+/* card layout: horizontal question track */
+.track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:24px;align-items:flex-start}
+.track::-webkit-scrollbar{display:none}
+.pane{flex:0 0 100%;scroll-snap-align:start;scroll-snap-stop:always}
+.pane .step{margin-top:6px;animation:none}
+.dots{display:flex;justify-content:center;gap:6px;margin:14px 0 6px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}.dots i.on{width:18px;border-radius:3px;background:var(--accent)}
+.sumcard.fixed{margin-top:10px}
+
+/* travel trip */
+.trip{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.trip .chip{min-height:36px;padding:7px 12px;font-size:.82em}
+.trip .chip.missing{border-style:dashed;color:var(--accent)}
+.offer{margin-left:0}
+.offer .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.offer .links a{min-height:36px;padding:0 13px;border-radius:999px;background:var(--field);font-size:.8em;font-weight:500;display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
+.offer .links a.primary-ish{background:var(--accent);color:#fff}
+.unav{background:var(--surface);border:1px dashed var(--line);border-radius:16px;padding:12px 14px;font-size:.88em;color:var(--ink-2);margin-top:12px}
+/* home state / morning brief */
+.brief{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);margin-top:18px;overflow:hidden}
+.brief .bh{display:flex;align-items:baseline;justify-content:space-between;padding:12px 16px 6px}
+.brief .bh b{font-weight:700;letter-spacing:-.02em}.brief .bh span{font-size:.78em;color:var(--ink-2)}
+.brief .sec2{padding:8px 16px 10px;border-top:1px solid var(--line)}
+.brief .sec2 h4{margin:0 0 6px;font-size:.75em;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em}
+.brief .row2{display:flex;align-items:center;gap:10px;min-height:40px}
+.brief .row2 .t{flex:1;min-width:0;font-size:.92em}.brief .row2 .t small{display:block;color:var(--ink-2);font-size:.82em}
+.brief .row2 .st{flex:none}
+.brief .row2.ov .t small{color:#d70015}
+/* notifications */
+.bell{position:relative}
+.bell .n{position:absolute;top:6px;right:6px;min-width:16px;height:16px;border-radius:8px;background:#ff3b30;color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+.nitem{display:flex;gap:12px;padding:12px 14px;align-items:flex-start}
+.nitem+.nitem{border-top:1px solid var(--line)}
+.nitem .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:7px;flex:none}
+.nitem.read .dot{background:transparent;border:1px solid var(--line)}
+.nitem .t{flex:1;min-width:0}.nitem .t b{display:block;font-weight:600}.nitem .t small{display:block;color:var(--ink-2);font-size:.8em}
+.kv{display:grid;grid-template-columns:7em 1fr;gap:6px 10px;font-size:.9em;margin:10px 0}
+.kv span:nth-child(odd){color:var(--ink-2)}
+.cap{font-size:.72em;color:var(--ink-3);text-align:center;margin-top:8px}
+/* saver v1 sort/filter + saved list */
+.sortbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 10px;padding-bottom:2px}
+.sortbar::-webkit-scrollbar{display:none}
+.sortbar button{flex:none;min-height:36px;padding:0 12px;border-radius:999px;background:var(--field);font-size:.8em;font-weight:500;color:var(--ink-2)}
+.sortbar button.on{background:var(--accent);color:#fff}
+.lbl.unavail{background:#f1dede;color:#8a2a12}
+.rc .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+input:focus{scroll-margin-top:80px}
+/* saver v1 table */
+.ptab{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;font-size:.85em}
+.ptab th,.ptab td{padding:10px 10px;text-align:left;vertical-align:top;border-top:1px solid var(--line)}
+.ptab th{font-size:.78em;font-weight:600;color:var(--ink-2);border-top:0;background:var(--field)}
+.ptab td.pr{font-weight:600;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.lbl{display:inline-block;font-size:.7em;font-weight:600;padding:2px 7px;border-radius:999px;background:var(--field);color:var(--ink-2);white-space:nowrap}
+.lbl.live{background:color-mix(in srgb,var(--good) 15%,var(--surface));color:var(--good)}
+.lbl.known{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent)}
+.lbl.user{background:#f5e6c8;color:#6b4a06}
+.ptab a{color:var(--accent);text-decoration:none;font-weight:500}
+.engine-note{font-size:.72em;color:var(--ink-3);text-align:center;margin-top:10px}
+.mockbadge{display:inline-block;font-size:.7em;font-weight:600;padding:3px 8px;border-radius:999px;background:#ffe5e0;color:#8a2a12;margin-left:6px;vertical-align:middle}
+.dl{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 13px;border-radius:999px;background:var(--field);font-size:.8em;font-weight:500;text-decoration:none;color:var(--ink)}
+.dl.primary-ish{background:var(--accent);color:#fff}
+.dl small{font-size:.85em;color:inherit;opacity:.75}
+
+/* results */
+.status{margin-top:40px;display:flex;align-items:center;gap:12px;color:var(--ink-2);font-size:.9em}
+.spin{width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.stop{margin-left:auto;color:var(--accent);font-weight:500}
+.results{margin-top:20px;animation:rise .4s cubic-bezier(.2,.8,.2,1)}
+.ctx{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.ctx span{font-size:.78em;padding:5px 11px;border-radius:999px;background:var(--field);color:var(--ink-2)}
+.summary{font-size:1.1em;line-height:1.4;margin:0 0 28px}
+.group{margin-bottom:28px}
+.group h3{font-size:.78em;font-weight:600;color:var(--ink-2);margin:0 0 10px 4px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
+.best{border:1.5px solid var(--accent)}
+.row{display:flex;gap:14px;padding:16px 18px;align-items:flex-start}
+.row+.row{border-top:1px solid var(--line)}
+.row .who{flex:1;min-width:0}.row .nm{font-weight:600}.row .sb{color:var(--ink-2);font-size:.85em;margin-top:2px}.row .why{font-size:.9em;margin-top:6px}
+.price{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap;text-align:right}
+.price small{display:block;font-weight:400;color:var(--ink-2);font-size:.78em}
+.best .nm{font-size:1.1em}.best .price{font-size:1.25em}
+.pill{display:inline-block;font-size:.72em;font-weight:600;color:#fff;background:var(--good);padding:2px 8px;border-radius:999px;margin-bottom:8px}
+.tips{color:var(--ink-2);font-size:.9em;padding-left:18px;margin:0}.tips li+li{margin-top:6px}
+.note{font-size:.78em;color:var(--ink-3);text-align:center;margin:24px auto 0;max-width:52ch}
+.err{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;font-size:.9em}
+.err strong{display:block;margin-bottom:4px}
+
+/* home */
+.hero{margin:14px 0 22px}
+.hero h1{font-size:1.45em;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin:0 0 12px;white-space:nowrap}
+.hero .field{margin-top:4px}
+.answer{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px 18px;box-shadow:var(--shadow);margin-top:18px;white-space:pre-wrap;line-height:1.5;animation:rise .35s cubic-bezier(.2,.8,.2,1)}
+.answer .from{display:flex;align-items:center;gap:8px;font-size:.78em;color:var(--ink-2);margin-bottom:8px;white-space:normal}
+.answer .from i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.hero p{margin:0;color:var(--ink-2)}
+.gridh{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tileh{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:18px;min-height:150px;background:var(--surface);border:1.5px solid var(--line);text-align:left;box-shadow:var(--shadow)}
+.tileh.live{border-color:var(--accent)}
+.tileh .top{display:flex;justify-content:space-between;align-items:flex-start}
+.tileh .ico{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;color:#fff}
+.tileh .ico svg{width:22px;height:22px}
+.tileh .soon{font-size:.6em;font-weight:600;color:var(--ink-2);background:var(--field);padding:3px 8px;border-radius:999px}
+.tileh b{display:block;font-weight:600;font-size:.85em;line-height:1.2;letter-spacing:-.01em}
+.tileh small{display:block;font-size:.7em;color:var(--ink-2);line-height:1.3;margin-top:2px}
+.tileh.slot{border-style:dashed;background:transparent;box-shadow:none;justify-content:center;align-items:center;color:var(--ink-3)}
+.tileh.slot .ico{background:var(--field);color:var(--ink-3)}
+.tileh.slot b{color:var(--ink-3);text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:.85em;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30}
+.toast.show{opacity:1}
+
+/* reminder */
+.rhead{display:flex;align-items:baseline;justify-content:space-between;margin-top:6px}
+.rhead b{font-size:1.5em;font-weight:700;letter-spacing:-.03em}
+.rhead span{font-size:.85em;color:var(--ink-2)}
+.filters{display:flex;gap:6px;margin:12px 0 6px}
+.filters button{flex:1;min-height:40px;border-radius:10px;background:var(--field);font-size:.85em;font-weight:500;color:var(--ink-2)}
+.filters button.on{background:var(--accent);color:#fff;font-weight:600}
+.tl{display:grid;grid-template-columns:3.2em 14px 1fr;column-gap:10px}
+.tl .t{font-size:.8em;font-weight:600;color:var(--ink-2);padding-top:14px;text-align:right}
+.tl .t.now{color:var(--accent)}.tl .t.due{color:#d70015}
+.tl .ln{display:flex;flex-direction:column;align-items:center}
+.tl .ln i{width:12px;height:12px;border-radius:50%;background:var(--line);margin-top:16px;flex:none}
+.tl .ln i.now{background:var(--accent);box-shadow:0 0 0 4px rgba(10,132,255,.18)}.tl .ln i.due{background:#d70015}
+.tl .ln s{flex:1;width:2px;background:var(--line);display:block}
+.rc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.rc.now{border:1.5px solid var(--accent)}.rc.done{opacity:.55}.rc.done .rt{text-decoration:line-through}
+.rc .rt{font-weight:500}.rc .rs{font-size:.8em;color:var(--ink-2);margin-top:2px}.rc .rs.due{color:#d70015}
+.rc .ra{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.rc .ra button{min-height:34px;padding:0 12px;border-radius:999px;background:var(--field);font-size:.8em;font-weight:500}
+.rbar{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);margin-top:16px;box-shadow:var(--shadow),0 14px 40px rgba(0,0,0,.12)}
+.understood{background:var(--surface);border:1.5px solid var(--accent);border-radius:18px;padding:14px 16px;margin-top:14px;animation:rise .35s cubic-bezier(.2,.8,.2,1)}
+.understood .lbl{font-size:.75em;font-weight:600;color:var(--accent);margin-bottom:6px}
+.understood .ttl{font-size:1.05em;font-weight:600}
+.understood .chips{margin-top:10px}
+.understood .chips span{font-size:.8em;padding:5px 11px;border-radius:999px;background:var(--field)}
+.understood .ra{display:flex;gap:8px;margin-top:12px}
+.understood .ra .primary{flex:1}
+.understood .ra .alt{min-height:44px;padding:0 16px;border:1.5px solid var(--line);border-radius:999px;background:var(--surface)}
+.types{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.types button{min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:14px;border:1.5px solid var(--line);background:var(--surface);font-size:.72em;font-weight:600}
+.types button.on{border-color:var(--accent)}
+.types svg{width:22px;height:22px;color:var(--accent)}
+.rlist{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.rlist .row{align-items:center;padding:12px 16px}
+.rlist select{font:inherit;color:var(--ink-2);background:transparent;border:0;text-align:right}
+.chk2{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);flex:none;display:grid;place-items:center}
+.chk2.on{background:var(--good);border-color:var(--good)}.chk2.on::after{content:"";width:6px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.sec-lbl{font-size:.78em;font-weight:600;color:var(--ink-2);margin:16px 4px 8px}
+
+/* specialist helpers (travel, tech, legal, movie, sport) */
+.dets{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.det .l{font-size:.75em;font-weight:600;color:var(--ink-2);margin:0 4px 6px}
+.det .chips .chip{min-height:38px;padding:7px 13px;font-size:.85em}
+.dtoggle{font-size:.85em;color:var(--accent);font-weight:500;margin:10px 4px 0}
+.card2{margin-left:36px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow)}
+.card2.top{border:1.5px solid var(--accent)}
+.card2 .h{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.card2 .h b{font-weight:600}.card2 .h .pr{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.card2 .sb{font-size:.82em;color:var(--ink-2);margin-top:2px}
+.card2 .tag{display:inline-block;font-size:.7em;font-weight:600;color:var(--good);margin-top:6px}
+.card2 .ra{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.card2 .ra a,.card2 .ra button{min-height:36px;padding:0 13px;border-radius:999px;background:var(--field);font-size:.8em;font-weight:500;display:inline-flex;align-items:center;text-decoration:none;color:var(--ink)}
+.steps{margin-left:36px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 14px}
+.steps ol{margin:0;padding-left:20px}.steps li{padding:8px 0;font-size:.92em}.steps li+li{border-top:1px solid var(--line)}
+.disc{margin-left:36px;font-size:.75em;color:var(--ink-3)}
+/* cash back */
+.prog{display:flex;align-items:center;gap:12px;padding:12px 14px}
+.prog+.prog{border-top:1px solid var(--line)}
+.prog .lg{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-weight:700;font-size:.75em;color:#fff;flex:none}
+.prog .nm{flex:1;min-width:0}.prog .nm small{display:block;color:var(--ink-2);font-size:.78em}
+.prog input{width:6.5em;text-align:right;font:inherit;font-weight:600;background:var(--field);border:0;border-radius:10px;padding:8px 10px;color:var(--ink)}
+.goal{display:flex;align-items:center;gap:12px;padding:12px 14px}.goal+.goal{border-top:1px solid var(--line)}
+.goal .bar{height:6px;border-radius:3px;background:var(--line);margin-top:6px;overflow:hidden}.goal .bar i{display:block;height:100%;background:var(--good)}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.kpi div{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.kpi b{display:block;font-size:1.2em;font-weight:700;letter-spacing:-.02em}.kpi small{color:var(--ink-2);font-size:.75em}
+
+/* concierge chat */
+.quick{display:flex;gap:8px;margin-top:6px}
+.quick{overflow-x:auto;scrollbar-width:none}.quick::-webkit-scrollbar{display:none}
+.quick button{flex:1 0 64px;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1px solid var(--line);border-radius:14px;background:var(--surface);font-size:.7em;font-weight:600}
+.quick svg{width:20px;height:20px;color:#a2845e}
+.chat{display:flex;flex-direction:column;gap:10px;margin-top:14px;padding-bottom:8px}
+.bub{max-width:80%;padding:10px 14px;font-size:.95em;line-height:1.35;white-space:pre-wrap}
+.bub.me{align-self:flex-end;background:var(--accent);color:#fff;border-radius:18px 18px 4px 18px}
+.bub.ai{background:var(--surface);border:1px solid var(--line);border-radius:18px 18px 18px 4px;max-width:84%}
+.airow{display:flex;gap:8px;align-items:flex-end}
+.airow .av{width:28px;height:28px;border-radius:50%;background:#a2845e;display:grid;place-items:center;flex:none}
+.airow .av svg{width:15px;height:15px;color:#fff}
+.pick{margin-left:36px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow)}
+.pick.top{border:1.5px solid var(--accent)}
+.pick .h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}.pick .h b{font-weight:600}.pick .h span{font-size:.75em;color:var(--good);font-weight:600;white-space:nowrap}
+.pick .d{font-size:.82em;color:var(--ink-2);margin-top:2px}
+.pick .ra{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.pick .ra button{min-height:36px;padding:0 13px;border-radius:999px;background:var(--field);font-size:.8em;font-weight:500}
+.pick .ra button.b{background:var(--accent);color:#fff;font-weight:600}
+.cbar{position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);margin-top:12px;box-shadow:var(--shadow),0 14px 40px rgba(0,0,0,.12)}
+
+/* connections sheet */
+.sheet-scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .25s;z-index:40}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-radius:22px 22px 0 0;padding:10px 20px calc(env(safe-area-inset-bottom,0px) + 20px);transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);z-index:41;max-height:88vh;overflow-y:auto;box-shadow:0 -10px 40px rgba(0,0,0,.15)}
+.sheet .grab{width:36px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
+body.sheet-open .sheet-scrim{opacity:1;pointer-events:auto}body.sheet-open .sheet{transform:none}
+.sheet h2{margin-bottom:6px}
+.svc{display:flex;align-items:center;gap:12px;padding:10px 0}
+.svc+.svc{border-top:1px solid var(--line)}
+.svc .lg{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-weight:700;font-size:.8em;color:#fff;flex:none}
+.svc .nm{flex:1;min-width:0}.svc .nm small{display:block;color:var(--ink-2);font-size:.78em}
+.st{font-size:.72em;font-weight:600;padding:4px 9px;border-radius:999px;background:var(--field);color:var(--ink-2);flex:none}
+.st.on{background:color-mix(in srgb,var(--good) 15%,var(--surface));color:var(--good)}
+.will{background:var(--field);border-radius:14px;padding:12px 14px;font-size:.85em;margin:14px 0}
+.will b{display:block;margin-bottom:4px}
+.will ul{margin:0;padding-left:18px}
+.li .st{margin-left:auto}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:min(340px,86vw);background:var(--group);transform:translateX(-102%);transition:transform .3s cubic-bezier(.2,.8,.2,1);z-index:21;overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 24px);box-shadow:0 0 40px rgba(0,0,0,.15)}
+body.open .scrim{opacity:1;pointer-events:auto}body.open .drawer{transform:none}
+.dtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.dtop b{font-size:1em}
+.sec{font-size:.78em;color:var(--ink-2);margin:20px 12px 6px;font-weight:500}
+.list{background:var(--surface);border-radius:14px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;min-height:48px;padding:10px 14px;width:100%;text-align:left}
+.li+.li{border-top:1px solid var(--line)}
+.li .lb{flex:1;min-width:0}.li .lb small{display:block;color:var(--ink-2);font-size:.8em}
+.li svg{width:20px;height:20px;color:var(--accent);flex:none}
+.seg{display:flex;background:var(--field);border-radius:10px;padding:2px;flex:none}
+.seg button{padding:6px 10px;border-radius:8px;font-size:.8em;font-weight:500;color:var(--ink-2)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg button:disabled{opacity:.35}
+.acct{background:var(--surface);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.acct .av{width:52px;height:52px;border-radius:50%;background:var(--field);display:grid;place-items:center;color:var(--ink-2)}
+.acct .av svg{width:28px;height:28px}
+.sso{display:flex;align-items:center;justify-content:center;gap:10px;min-height:46px;border-radius:12px;border:1.5px solid var(--line);font-weight:500;font-size:.92em;width:100%}
+.sso.reid{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.small{font-size:.78em;color:var(--ink-2)}
+.hist{display:flex;flex-direction:column}
+.hist .li b{display:block;font-weight:500}
+.empty{padding:14px;color:var(--ink-3);font-size:.85em}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <button class="ib" id="menu" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <a class="logo" href="#" id="home" aria-label="AI HELPER home"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9.4l-4.7 1.8L12 16l-1.8-4.8L5.5 9.4l4.7-1.8z"/></svg></span><span class="name" id="hname">AI HELPER</span></a>
+  <button class="ib bell" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0v5l2 3H4l2-3z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="n" id="bellN" hidden>0</span></button>
+</header>
+
+<main class="app" id="app"></main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="sheet-scrim" id="sheetScrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Details"><div class="grab"></div><div id="sheetBody"></div></div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Menu">
+  <div class="dtop"><b>Menu</b><button class="ib" id="close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+
+  <div class="sec">Account</div>
+  <div class="acct" id="acct"></div>
+
+  <div class="sec">Appearance</div>
+  <div class="list">
+    <div class="li"><div class="lb">Layout<small id="layoutNote">Card is the default</small></div><div class="seg" id="segLayout"><button data-v="flow">Flow</button><button data-v="steps">Steps</button><button data-v="card">Card</button></div></div>
+    <div class="li"><div class="lb">Reminder layout<small>Timeline is the default</small></div><div class="seg" id="segRem"><button data-v="sayit">Say it</button><button data-v="form">Form</button><button data-v="timeline">Timeline</button></div></div>
+    <div class="li"><div class="lb">Read answers aloud<small>Master helper reads back its reply</small></div><div class="seg" id="segRead"><button data-v="off">Off</button><button data-v="on">On</button></div></div>
+    <div class="li"><div class="lb">Theme</div><div class="seg" id="segTheme"><button data-v="light">Day</button><button data-v="dark">Night</button><button data-v="auto">Auto</button></div></div>
+    <div class="li"><div class="lb">Text size<small>Large text turns off the Card layout</small></div><div class="seg" id="segText"><button data-v="normal">Normal</button><button data-v="large">Large</button></div></div>
+  </div>
+
+  <div class="sec">Connections</div>
+  <div class="list" id="conn"></div>
+  <div class="small" style="margin:8px 12px 0">"I use this" is a preference the helpers respect. Account links appear here only when a provider connection is actually available.</div>
+
+  <div class="sec">Saved searches</div>
+  <div class="list" id="savedList"></div>
+  <div class="sec">Price alerts</div>
+  <div class="list" id="alertList"></div>
+  <div class="small" style="margin:8px 12px 0" id="alertNote">Alerts are checked by the server when price sources are connected. Until then they are stored only.</div>
+
+  <div class="sec">History</div>
+  <div class="list hist" id="hist"></div>
+  <div class="small" style="margin:14px 12px 0">Saved on this device. Sign in to keep it across devices.</div>
+</aside>
+
+<script>
+/* AI HELPER frontend — architecture (29 Sep 2026)
+   AI HELPER (this UI)  ->  Engine adapter  ->  Claude runtime (inside claude.ai) | /api/ai (server) | reAI/JARVIS (future)
+                        ->  Identity adapter -> reID (stub now, OAuth later) | Google (later)
+                        ->  Store (repository) -> localStorage now | server DB (later)
+   Anything talking to a provider goes through one of the three adapters below; product code never calls a provider directly. */
+(() => {
+const $=id=>document.getElementById(id);
+const app=$('app'), drawer=$('drawer');
+// ===== In-app notification center (local only). No background delivery: notifications exist while the app is open. push/e-mail = interface only (HOLD).
+const Notif={list:[],
+  init(){this.list=Array.isArray(Store.get('aisaver.notifs'))?Store.get('aisaver.notifs'):[];},
+  save(){this.list=this.list.slice(0,60);Store.set('aisaver.notifs',this.list);this.badge();},
+  add(n){const id='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);const key=n.key||null;if(key&&this.list.some(x=>x.key===key&&Date.now()-x.at<864e5))return null;this.list.unshift({id,at:Date.now(),read:false,...n});this.save();return id;},
+  unread(){return this.list.filter(x=>!x.read).length;},
+  prune(){let ch=false;this.list.forEach(n=>{if(!n.dest)return;if(n.dest.reminderId&&!reminders.some(r=>r.id===n.dest.reminderId&&!r.done)){n.stale=true;if(!n.read){n.read=true;ch=true;}}if(n.dest.alertId&&!alerts.some(a=>(a.id||a.need)===n.dest.alertId)){n.stale=true;if(!n.read){n.read=true;ch=true;}}});if(ch)this.save();},
+  badge(){const b=document.getElementById('bellN');if(!b)return;const u=this.unread();b.hidden=!u;b.textContent=u>9?'9+':u;},
+  markAll(){this.list.forEach(x=>x.read=true);this.save();},
+  open(){const items=this.list.slice(0,30).map(n=>`<div class="nitem ${n.read?'read':''}" data-nid="${n.id}"><span class="dot"></span><div class="t"><b>${esc(n.title)}</b>${esc(n.message)}${n.stale?' · no longer current':''}<small>${esc(n.helper||'AI HELPER')} · ${esc(fmtFresh(new Date(n.at).toISOString())||'')}</small></div>${n.dest?`<button class="st" data-act="notif-go" data-nid="${n.id}">Open</button>`:''}</div>`).join('');
+    openSheet(`<h2>Notifications</h2><p class="sub">Only while the app is open. Push and e-mail are not enabled.</p><div class="rlist">${items||'<div class="empty">Nothing yet.</div>'}</div><button class="ghost" data-act="notif-clear" style="margin-top:10px">Mark all read</button>`);this.markAll();},
+  // internal events
+  systemChecks(){ if(Engine.mode==='mock')this.add({key:'engine-mock',type:'system',title:'Assistant in mock mode',message:'No AI provider key is configured on the server; answers are placeholders.',helper:'System'});
+    const soon=reminders.filter(r=>!r.done&&new Date(r.when)>Date.now()&&new Date(r.when)-Date.now()<3600e3);soon.forEach(r=>this.add({key:'rem-'+r.id,type:'reminder',title:'Coming up: '+r.title,message:whenLabel(r),helper:'AI REMINDER',dest:{helper:'reminder',reminderId:r.id}}));
+    const due=reminders.filter(r=>!r.done&&new Date(r.when)<Date.now());due.slice(0,3).forEach(r=>this.add({key:'due-'+r.id,type:'reminder',title:'Due: '+r.title,message:whenLabel(r),helper:'AI REMINDER',dest:{helper:'reminder',reminderId:r.id}}));}
+};
+// ===== Capability registry (client). Truthful runtime answer to "can AI HELPER actually do X right now?"
+const Caps={server:null,
+  async load(){if(Engine.name==='http'){try{const r=await fetch('/api/capabilities');if(r.ok)this.server=(await r.json()).capabilities;}catch(e){}}},
+  get(id){ if(this.server&&this.server[id])return this.server[id];
+    const base={'master.answer':'AVAILABLE','master.route':'AVAILABLE','engine.live':Engine.name==='claude-runtime'?'AVAILABLE':(Engine.mode==='mock'?'NOT_CONFIGURED':'AVAILABLE'),
+      'reminder.local':'AVAILABLE','reminder.ics':'AVAILABLE','reminder.google_calendar':'NOT_CONFIGURED','reminder.native_ios':'NATIVE_DEPENDENCY',
+      'saver.compare':'AVAILABLE','saver.saved_search':'AVAILABLE','saver.alert_definition':'AVAILABLE','saver.alert_evaluation':'NOT_CONFIGURED','saver.live_prices':'NOT_CONFIGURED','saver.nearby_stores':'NOT_CONFIGURED','saver.amazon':'BLOCKED_EXTERNALLY',
+      'concierge.discovery':'NOT_CONFIGURED','concierge.maps':'AVAILABLE','concierge.call':'NOT_CONFIGURED','concierge.website':'NOT_CONFIGURED','concierge.booking_deeplink':'AVAILABLE','concierge.ride_deeplink':'AVAILABLE','concierge.delivery_deeplink':'AVAILABLE','concierge.real_booking':'NOT_IMPLEMENTED',
+      'travel.search':'AVAILABLE','travel.live_flights':'NOT_CONFIGURED','travel.live_hotels':'BLOCKED_EXTERNALLY','travel.booking_path':'AVAILABLE',
+      'movie.recommend':'AVAILABLE','movie.streaming_live':'NOT_IMPLEMENTED','sport.knowledge':'AVAILABLE','sport.fixtures_live':'NOT_IMPLEMENTED','sport.results_live':'NOT_IMPLEMENTED','sport.standings_live':'NOT_IMPLEMENTED',
+      'identity.stub':'AVAILABLE','identity.google':'NOT_CONFIGURED','identity.reid':'BLOCKED_EXTERNALLY',
+      'notifications.in_app':'AVAILABLE','notifications.push':'HOLD','notifications.email':'HOLD','voice.input':(window.SpeechRecognition||window.webkitSpeechRecognition)?'AVAILABLE':'NATIVE_DEPENDENCY','location.gps':navigator.geolocation?'AVAILABLE':'NATIVE_DEPENDENCY'};
+    return base[id]||'NOT_IMPLEMENTED';},
+  can(id){return this.get(id)==='AVAILABLE';},
+  // user-facing wording, never technical noise
+  note(id){const st=this.get(id);const W={'saver.live_prices':{NOT_CONFIGURED:'Prices are estimates until a price source is connected.'},'concierge.discovery':{NOT_CONFIGURED:'Suggestions come from the assistant, not live nearby listings.'},'travel.live_flights':{NOT_CONFIGURED:'Fares are estimates — current availability not checked.'},'travel.live_hotels':{BLOCKED_EXTERNALLY:'Hotel rates are estimates — partner access pending.'},'sport.results_live':{NOT_IMPLEMENTED:'Live scores and fixtures are not connected; answers are from knowledge.'},'movie.streaming_live':{NOT_IMPLEMENTED:'Where-to-watch is from knowledge, not a live catalogue.'},'reminder.google_calendar':{NOT_CONFIGURED:'Calendar sync not set up — export .ics instead.'}};return (W[id]&&W[id][st])||'';},
+  summary(){return Object.entries({'saver.live_prices':'live prices','concierge.discovery':'live nearby discovery','travel.live_flights':'live flights','travel.live_hotels':'live hotels','sport.results_live':'live sport data','movie.streaming_live':'live streaming availability','reminder.google_calendar':'calendar sync','concierge.real_booking':'real bookings'}).map(([k,l])=>`${l}: ${this.can(k)?'yes':'no'}`).join(', ');}
+};
+// ===== Store adapter (repository layer). Swap `impl` for a server-backed one without touching product code.
+const Store=(()=>{const impl={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){try{localStorage.removeItem(k)}catch(e){}}};return {kind:'local',get:k=>impl.get(k),set:(k,v)=>impl.set(k,v),del:k=>impl.del(k)};})();
+const load=k=>Store.get(k), save=(k,v)=>Store.set(k,v);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Uniform UI states for every helper: loading | empty | error — one look, one place.
+const ERRMSG={no_key:['AI is not configured yet','The server has no provider key; mock answers are shown.'],not_configured:['Service not configured','This connection is not set up yet.'],not_ready:['Starting up','Try again in a second.'],rate_limited:['Too many requests','Wait a moment, then try again.'],timeout:['The engine took too long','Try again.'],refused:['Can’t help with that one','Try describing it differently.'],invalid_json:['The answer came back malformed','Try again — it usually works on the second run.'],upstream:['The engine had a problem','Try again in a moment.'],cancelled:null,not_granted:['AI is off for this page','Allow it when asked.'],session_expired:['You’re signed out','Sign in and try again.']};
+function stateHtml(kind,opt={}){
+  if(kind==='loading')return `<div class="status" style="margin-top:14px"><span class="spin"></span><span>${esc(opt.text||'Working…')}</span>${opt.stop?`<button class="stop" data-act="${opt.stop}">Stop</button>`:''}</div>`;
+  if(kind==='empty')return `<p class="sub" style="margin-top:24px;text-align:center">${esc(opt.text||'Nothing here yet.')}</p>`;
+  const m=ERRMSG[opt.code]===undefined?['Something interrupted the request','Try again in a moment.']:ERRMSG[opt.code]; if(!m)return '';
+  return `<div class="err"><strong>${esc(m[0])}</strong>${esc(m[1])}${opt.retry?` <button class="link" data-act="${opt.retry}">Retry</button>`:''}</div>`;
+}
+
+// ---------- settings
+const settings=Object.assign({layout:'card',theme:'auto',text:'normal',user:null,rem:'timeline',readback:'off'},load('aisaver.settings')||{});
+if(settings.text==='large'&&settings.layout==='card') settings.layout='flow';
+let history=Array.isArray(load('aisaver.history'))?load('aisaver.history'):[];
+function applySettings(){
+  const r=document.documentElement;
+  if(settings.theme==='auto') r.removeAttribute('data-theme'); else r.setAttribute('data-theme',settings.theme);
+  r.setAttribute('data-text',settings.text);
+  for(const [id,key] of [['segLayout','layout'],['segTheme','theme'],['segText','text'],['segRem','rem'],['segRead','readback']]){
+    $(id).querySelectorAll('button').forEach(b=>{b.classList.toggle('on',b.dataset.v===settings[key]);});
+  }
+  $('segLayout').querySelector('[data-v="card"]').disabled = settings.text==='large';
+  $('layoutNote').textContent = settings.text==='large' ? 'Card is off while text is large' : {card:'Card is the default',flow:'Everything on one page',steps:'One question at a time'}[settings.layout];
+  save('aisaver.settings',settings);
+  if(settings.updatedAt&&settings.updatedAt!==SettingsSync.lastPushed){SettingsSync.lastPushed=settings.updatedAt;SettingsSync.push();}
+}
+const touchSettings=()=>{settings.updatedAt=Date.now();};
+for(const [id,key] of [['segLayout','layout'],['segTheme','theme'],['segText','text'],['segRem','rem'],['segRead','readback']]){
+  $(id).addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(!b||b.disabled)return;settings[key]=b.dataset.v;touchSettings();
+    if(key==='text'&&b.dataset.v==='large'&&settings.layout==='card') settings.layout='flow';
+    applySettings(); render();});
+}
+
+// ---------- drawer
+const open=()=>{document.body.classList.add('open');renderAccount();renderHistory();renderConnections();renderSavedAlerts();};
+const close=()=>document.body.classList.remove('open');
+$('menu').onclick=open; $('close').onclick=close; $('scrim').onclick=close; $('bell').onclick=()=>Notif.open();
+$('home').onclick=e=>{e.preventDefault();close();goHome();};
+
+function renderAccount(){
+  const a=$('acct');
+  if(settings.user){
+    a.innerHTML=`<div style="display:flex;align-items:center;gap:12px"><div class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><div><b>${esc(settings.user.name)}</b><div class="small">${esc(settings.user.via)}</div></div></div><button class="ghost" data-act="signout">Sign out</button>`;
+  } else {
+    const reidSt=Caps.get('identity.reid'),googSt=Caps.get('identity.google'),stub=Caps.can('identity.stub')&&Engine.name!=='http';
+    a.innerHTML=`<div style="display:flex;align-items:center;gap:12px"><div class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div><div><b>Not signed in</b><div class="small">${reidSt==='AVAILABLE'||googSt==='AVAILABLE'?'Sign in to keep your data across devices':stub?'Sign-in providers not set up yet — a development sign-in is available':'Sign-in providers not set up yet'}</div></div></div>
+    ${reidSt==='AVAILABLE'||stub?`<button class="sso reid" data-act="signin" data-via="reID">`:`<button class="sso reid" disabled style="opacity:.5">`}<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>${reidSt==='AVAILABLE'?'Continue with reID':stub?'Development sign-in (stub)':'reID — waiting for the reID server'}</button>
+    ${googSt==='AVAILABLE'?`<button class="sso" data-act="signin" data-via="Google">`:`<button class="sso" disabled style="opacity:.5">`}<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 12h8M12 8v8"/></svg>${googSt==='AVAILABLE'?'Continue with Google':'Google — not configured'}</button>
+    <div class="small" id="ssoNote"></div><div class="small" style="margin-top:8px">Location: ${load('aisaver.city')?esc(load('aisaver.city'))+' (set by you)':'not set'} · GPS used only when you choose it.</div>`;
+  }
+}
+$('acct').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  if(b.dataset.act==='signin'){ Identity.signIn(b.dataset.via).then(u=>{settings.user=u;applySettings();renderAccount();toast(`Signed in as ${u.name} — stub until reID OAuth is live`);}).catch(()=>{$('ssoNote').textContent=`${b.dataset.via} sign-in is not connected yet.`;}); }
+  if(b.dataset.act==='signout'){ Identity.signOut(); renderAccount(); }
+});
+function alertHistory(i){const x=alerts[i];if(!x)return;
+  const hist=(x.history||[]).slice().reverse().map(h=>`<div class="nitem read"><span class="dot"></span><div class="t"><b>${esc(h.event)}</b>${esc(h.detail||'')}<small>${esc(fmtFresh(new Date(h.at).toISOString())||'')}</small></div></div>`).join('');
+  const last=x.lastObs?`${x.lastObs.merchant||''} ${x.lastObs.price||''} ${LABEL[x.lastObs.label]?'('+LABEL[x.lastObs.label][0]+')':''}`:'none';
+  openSheet(`<h2>${esc(x.need)}</h2><div class="kv"><span>Condition</span><span>${x.cond==='drop_pct'?'drops by '+esc(x.value)+'%':'below '+esc(x.ref||x.value||'—')}</span><span>Status</span><span>${x.status==='disabled'?'Paused':'Active'}</span><span>Eligible source</span><span>${Caps.can('saver.alert_evaluation')?'Connected':'None connected — not monitored'}</span><span>Last evaluation</span><span>${x.lastEval?esc(fmtFresh(x.lastEval)):'never'}</span><span>Last eligible price</span><span>${esc(last)}</span><span>Triggered</span><span>${x.triggeredAt?'Yes · '+esc(fmtFresh(x.triggeredAt)):'No'}</span></div><p class="sub">Only live or last-known prices with a known time can trigger. Estimates, your own entries and unavailable prices never do.</p><div class="rlist">${hist||'<div class="empty">No history yet.</div>'}</div><div class="chips" style="margin-top:12px"><button class="chip" data-act="alert-eval" data-i="${i}">Evaluate now</button><button class="chip" data-act="sheet-close">Close</button></div>`);}
+function localEvaluate(x){ // same rules as the server's pure evaluate(): eligible = LIVE / LAST_KNOWN with known freshness
+  const obs=(result&&A&&A.need.trim()===x.need&&result.real&&result.real.results||[]).filter(o=>Prov.eligible(o)&&o.freshness&&Prov.freshness(o.freshness)!=='unknown');
+  const amt=p=>{const m=String(p||'').replace(/,/g,'').match(/[\d.]+/);return m?parseFloat(m[0]):null;};const lowest=obs.map(o=>({...o,amount:amt(o.price)})).filter(o=>o.amount!=null).sort((a,b)=>a.amount-b.amount)[0]||null;
+  x.lastEval=new Date().toISOString();x.history=x.history||[];
+  if(!lowest){x.history.push({at:Date.now(),event:'evaluated',detail:obs.length?'no eligible price':'no eligible source'});return {triggered:false};}
+  x.lastObs={merchant:lowest.merchant,price:lowest.price,label:lowest.label};const target=x.cond==='drop_pct'?(x.refAmt||(x.refAmt=lowest.amount))*(1-(+x.value||0)/100):(amt(x.ref)||+x.value||0);
+  const trig=lowest.amount<=target;x.history.push({at:Date.now(),event:'evaluated',detail:`${lowest.merchant} ${lowest.price} — ${trig?'condition met':'not met'}`});
+  if(trig){x.triggeredAt=x.lastEval;Notif.add({key:'trig-'+(x.id||x.need),type:'alert',title:'Price alert: '+x.need,message:`${lowest.merchant} ${lowest.price} (${LABEL[lowest.label][0]})`,helper:'AI SAVER',dest:{alertId:x.id||x.need}});}
+  return {triggered:trig,lowest};}
+function renderSavedAlerts(){
+  const sl=$('savedList'); sl.innerHTML=saved.length?saved.slice(0,20).map((x,i)=>`<div class="li"><button class="lb" style="text-align:left" data-act="saved-open" data-i="${i}"><b style="font-weight:500">${esc(x.need)}</b><small>${esc(x.best||'')}${x.price?' · '+esc(x.price):''}${x.prefs&&x.prefs.where?' · '+esc(x.prefs.where):''}</small></button><button class="st" data-act="saved-more" data-i="${i}">More</button></div>`).join(''):'<div class="empty">Nothing saved yet.</div>';
+  const al=$('alertList'); al.innerHTML=alerts.length?alerts.map((x,i)=>`<div class="li"><div class="lb"><b style="font-weight:500">${esc(x.need)}</b><small>${x.cond==='drop_pct'?'drops '+esc(x.value)+'% · ':x.ref?'below '+esc(x.ref)+' · ':''}${x.status==='disabled'?'paused':'active'} · ${x.lastEval?'last checked '+esc(fmtFresh(x.lastEval)):'no eligible source yet'}</small></div><button class="st" data-act="alert-hist" data-i="${i}">History</button><button class="st" data-act="alert-edit" data-i="${i}">Edit</button><button class="st ${x.status==='disabled'?'':'on'}" data-act="alert-toggle" data-i="${i}">${x.status==='disabled'?'Resume':'Pause'}</button><button class="st" data-act="alert-del" data-i="${i}">Remove</button></div>`).join(''):'<div class="empty">No alerts yet.</div>';
+}
+$('savedList').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const i=+b.dataset.i;const x=saved[i];if(!x)return;if(b.dataset.act==='saved-more'){close();openSheet(`<h2>${esc(x.need)}</h2><div class="kv"><span>Last result</span><span>${esc(x.best||'—')} ${x.price?esc(x.price):''} ${x.label?lblHtml(x.label):''}</span><span>Last run</span><span>${x.lastRun?esc(fmtFresh(new Date(x.lastRun).toISOString())):'—'}</span><span>For</span><span>${esc(x.prefs&&x.prefs.who||'me')}</span><span>Where</span><span>${esc(x.prefs&&x.prefs.where||'—')}</span><span>Stores</span><span>${esc([...(x.prefs&&x.prefs.online||[]),...(x.prefs&&x.prefs.nearby||[])].join(', ')||'—')}</span></div><input class="txt" id="svQ" value="${esc(x.need)}"><div class="chips" style="margin-top:12px"><button class="chip" data-act="saved-edit-save" data-i="${i}">Save changes</button><button class="chip" data-act="saved-run2" data-i="${i}">Rerun</button><button class="chip" data-act="saved-alert" data-i="${i}">Create alert</button><button class="chip" data-act="saved-del2" data-i="${i}">Delete</button></div>`);return;}if(b.dataset.act==='saved-open'){close();resetAll();A.need=x.need;if(x.prefs){A.who=x.prefs.who||'';if(x.prefs.where){A.where='city';const parts=String(x.prefs.where).split(',').map(z=>z.trim());A.whereCity=parts.pop()||'';A.whereAddr=parts.join(', ');}A.online=x.prefs.online||[];A.nearby=x.prefs.nearby||[];}render();}else if(b.dataset.act==='saved-run'){close();resetAll();A.need=x.need;if(x.prefs){A.who=x.prefs.who||'';A.online=x.prefs.online||[];A.nearby=x.prefs.nearby||[];}render();run();}else{saved.splice(i,1);save('aisaver.saved',saved);Notif.prune();renderSavedAlerts();}});
+$('alertList').addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const i=+b.dataset.i;const x=alerts[i];if(!x)return;if(b.dataset.act==='alert-hist'){close();alertHistory(i);return;}if(b.dataset.act==='alert-edit'){close();openSheet(`<h2>Edit alert</h2><p class="sub">${esc(x.need)} — alerts only use live or last-known prices, never estimates.</p><div class="chips" id="alCond"><button class="chip ${x.cond!=='drop_pct'?'on':''}" data-c="below">Below a price</button><button class="chip ${x.cond==='drop_pct'?'on':''}" data-c="drop_pct">Drops by %</button></div><input class="txt" id="alVal" inputmode="decimal" style="margin-top:10px" value="${esc(x.cond==='drop_pct'?x.value:String(x.ref||'').replace(/[^\\d.]/g,''))}" placeholder="e.g. 199 or 10"><button class="primary" data-act="alert-save" data-i="${i}" style="margin-top:14px">Save</button>`);return;}if(b.dataset.act==='alert-toggle'){x.status=x.status==='disabled'?'active':'disabled';}else{alerts.splice(i,1);Notif.prune();}save('aisaver.alerts',alerts);renderSavedAlerts();if(Engine.name==='http'&&settings.user)syncAlerts();});
+// Server sync (session required). Local copy stays the source for the UI; server is the durable copy. [SCAFFOLD until a session exists on staging]
+async function syncAlerts(){try{const r=await fetch('/api/alerts');if(!r.ok)return;}catch(e){}}
+function renderHistory(){
+  const h=$('hist');
+  if(!history.length){h.innerHTML='<div class="empty">No searches yet.</div>';return;}
+  h.innerHTML=history.slice(0,20).map((x,i)=>`<button class="li" data-i="${i}"><div class="lb"><b>${esc(x.need)}</b><small>${esc(x.best||'')}${x.price?' · '+esc(x.price):''} · ${esc(x.place||'')}</small></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>`).join('');
+}
+$('hist').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;const x=history[+b.dataset.i];if(!x)return;close();resetAll();A.need=x.need;render();});
+
+// ---------- answers / steps
+const STEPS=['who','where','what','online','nearby'];
+const CARD_STEPS=['who','where','online','nearby'];
+const S=()=>settings.layout==='card'?CARD_STEPS:STEPS;
+const ONLINE=['Amazon.ae','Noon','Sharaf DG','Carrefour','Jumbo','Namshi'];
+const NEARBY=['Carrefour','Lulu','Spinneys','Union Coop','Sharaf DG','Dubai Mall'];
+let A, cur, prevCur=0, mode='flow', reveal, result=null, err=null, busy=false, ctl=null, sample=null, view='home';
+const HELPERS=[
+ {id:'saver',name:'AI SAVER',desc:'Best price, stores & online',color:'#0a84ff',live:true,ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6h15l-1.5 8h-12z"/><path d="M6 6L5 3H2"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>'},
+ {id:'tech',live:true,name:'AI TECH HELPER',desc:'Devices, apps, setup',color:'#5e5ce6',ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 20h20"/></svg>'},
+ {id:'legal',live:true,name:'AI LEGAL HELPER',desc:'Contracts, rights, advice',color:'#8e6b3e',ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M5 7l-3 7a3 3 0 0 0 6 0z"/><path d="M19 7l-3 7a3 3 0 0 0 6 0z"/><path d="M8 21h8"/></svg>'},
+ {id:'sport',live:true,name:'AI SPORT EXPERT',desc:'Any sport, any question',color:'#34c759',ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v3a6 6 0 0 1-12 0z"/><path d="M6 6H3a3 3 0 0 0 3 3"/><path d="M18 6h3a3 3 0 0 1-3 3"/><path d="M12 13v4"/><path d="M8 21h8"/><path d="M9 17h6v4"/></svg>'},
+ {id:'movie',live:true,name:'AI MOVIE EXPERT',desc:'What to watch tonight',color:'#ff375f',ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M17 9h4M3 15h4M17 15h4"/></svg>'},
+ {id:'travel',live:true,name:'AI TRAVEL EXPERT',desc:'Flights, hotels, all travel',color:'#30b0c7',ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 16l20-6"/><path d="M10 14l-1 6 3-2 2-5"/><path d="M9 13L4 9l2-1 6 3"/></svg>'},
+ {id:'concierge',name:'AI CONCIERGE',desc:'Restaurants, clubs, taxis, contacts',color:'#a2845e',live:true,ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h18"/><path d="M4 17a8 8 0 0 1 16 0"/><path d="M12 9V6"/><path d="M10 6h4"/></svg>'},
+ {id:'cashback',live:true,name:'AI CASH BACK',desc:'Memberships, points, bonuses, goals',color:'#ff9500',ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5a2.5 2.5 0 0 0-5 0c0 3 5 2 5 5a2.5 2.5 0 0 1-5 0"/><path d="M12 6v1.5M12 16.5V18"/></svg>'},
+ {id:'reminder',name:'AI REMINDER',desc:'Alarms, appointments, payments, deadlines',color:'#636366',live:true,ico:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0v5l2 3H4l2-3z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>'}
+];
+const M={q:'',busy:false,answer:'',from:'',color:'',errCode:null,ctl:null,pending:null,lastQ:'',lastHelper:null,lastKind:null,open:null};
+// ---- Connections & Account
+const SERVICES={
+ saver:[{id:'amazon',name:'Amazon.ae',c:'#ff9900',why:'Compare prices with your account and Prime delivery'},{id:'noon',name:'Noon',c:'#feee00',why:'Prices and delivery times for your address'},{id:'carrefour',name:'Carrefour',c:'#004e9f',why:'MyCLUB prices and store stock'},{id:'sharaf',name:'Sharaf DG',c:'#e30613',why:'Electronics prices and pickup'}],
+ travel:[{id:'emirates',name:'Emirates',c:'#d71920',why:'Fares and Skywards miles'},{id:'flydubai',name:'flydubai',c:'#2a5caa',why:'Low fares from Dubai'},{id:'booking',name:'Booking.com',c:'#003580',why:'Hotels with your Genius level'},{id:'agoda',name:'Agoda',c:'#5c2d91',why:'Hotel deals in Asia and Middle East'}],
+ concierge:[{id:'careem',name:'Careem',c:'#4fbf67',why:'Taxi and delivery'},{id:'talabat',name:'Talabat',c:'#ff5a00',why:'Food delivery'},{id:'opentable',name:'OpenTable',c:'#da3743',why:'Restaurant bookings'}],
+ cashback:[{id:'skywards',name:'Emirates Skywards',c:'#d71920',why:'Miles and tier'},{id:'shukran',name:'Shukran',c:'#e4002b',why:'Landmark points'},{id:'share',name:'Share Rewards',c:'#009c7b',why:'Majid Al Futtaim points'}],
+ reminder:[{id:'calendar',name:'Phone calendar',c:'#0a84ff',why:'Read and add appointments'},{id:'reminders',name:'Phone reminders',c:'#ff9500',why:'Create alarms and to-dos'}],
+ movie:[{id:'netflix',name:'Netflix',c:'#e50914',why:'Only suggest what you can watch'},{id:'osn',name:'OSN+',c:'#0f0f0f',why:'Only suggest what you can watch'},{id:'shahid',name:'Shahid',c:'#00c7a0',why:'Arabic titles you can watch'}],
+ tech:[],legal:[],sport:[]
+};
+settings.conn=settings.conn||{};   // serviceId -> 'connected' | 'declined'
+const svcAll=()=>Object.entries(SERVICES).flatMap(([h,l])=>l.map(s=>({...s,helper:h})));
+function renderConnections(){
+  const c=$('conn'); const rows=[];
+  for(const h of HELPERS){ if(h.slot||!SERVICES[h.id]||!SERVICES[h.id].length) continue;
+    const on=SERVICES[h.id].filter(s=>settings.conn[s.id]==='connected').length;
+    rows.push(`<button class="li" data-act="conn-helper" data-id="${h.id}"><span class="ico" style="width:28px;height:28px;border-radius:8px;background:${h.color};display:grid;place-items:center;color:#fff;flex:none">${h.ico.replace('<svg','<svg width="16" height="16"')}</span><div class="lb">${h.name}<small>${SERVICES[h.id].map(s=>s.name).join(', ')}</small></div><span class="st ${on?'on':''}">${on?on+' you use':'None set'}</span></button>`);
+  }
+  c.innerHTML=rows.join('');
+}
+function openSheet(html){$('sheetBody').innerHTML=html;document.body.classList.add('sheet-open');}
+function closeSheet(){document.body.classList.remove('sheet-open');}
+$('sheetScrim').onclick=()=>{if(permResolve){permList.forEach(x=>{if(!settings.conn[x.id])settings.conn[x.id]='declined';});applySettings();permResolve(true);}else closeSheet();};
+// Each service has a truthful connection state from the capability registry. A real account link needs provider setup (OAuth/API); until then the only truthful control is "I use this" (a preference the helpers respect).
+const SVC_CAP={amazon:'saver.amazon',noon:null,carrefour:null,sharaf:null,emirates:null,flydubai:null,booking:'travel.live_hotels',agoda:'travel.live_hotels',careem:null,talabat:null,opentable:'concierge.booking_deeplink',skywards:null,shukran:null,share:null,calendar:'reminder.google_calendar',reminders:'reminder.native_ios',netflix:'movie.streaming_live',osn:'movie.streaming_live',shahid:'movie.streaming_live'};
+function svcState(s){const cap=SVC_CAP[s.id];if(cap===undefined||cap===null)return {state:'NOT_IMPLEMENTED',cls:'B',text:'No account link available yet'};const st=Caps.get(cap);const cls={AVAILABLE:'A',NOT_CONFIGURED:'B',BLOCKED_EXTERNALLY:'D',NATIVE_DEPENDENCY:'C',NOT_IMPLEMENTED:'B',HOLD:'E'}[st]||'B';return {state:st,cls,text:{AVAILABLE:'You can link your account',NOT_CONFIGURED:'Not set up yet (nothing for you to do)',BLOCKED_EXTERNALLY:'Waiting for partner access (nothing for you to do)',NATIVE_DEPENDENCY:'Needs the native app',NOT_IMPLEMENTED:'No account link available yet',HOLD:'On hold'}[st]||st};}
+function svcRow(s){const pref=settings.conn[s.id]==='connected';const st=svcState(s);return `<div class="svc"><span class="lg" style="background:${s.c}">${esc(s.name.slice(0,2).toUpperCase())}</span><div class="nm">${esc(s.name)}<small>${esc(s.why)} · ${esc(st.text)}</small></div><button class="st ${pref?'on':''}" data-act="svc-toggle" data-id="${s.id}" aria-pressed="${pref}">${pref?'I use this':'I use this?'}</button></div>`;}
+function helperSheet(hid){
+  const h=HELPERS.find(x=>x.id===hid), list=SERVICES[hid]||[];
+  openSheet(`<h2>${h.name} connections</h2><p class="sub">Mark the services you use: ${h.name} prioritises them. Linking an account (prices, bookings, balances) becomes possible only when that provider's connection is set up — the status under each service tells you where it stands.</p>${list.map(svcRow).join('')}<div class="will"><b>What a real account link will mean</b><ul><li>Credentials stay encrypted on your device; the server never sees them in clear.</li><li>Nothing is bought, booked or changed without you tapping confirm.</li><li>You can unlink any service here at any time.</li></ul></div><button class="primary" data-act="sheet-close">Done</button>`);
+}
+// asks once per helper before its first real use; resolves true when we can continue
+function askPermission(hid,purpose){
+  return new Promise(res=>{
+    const list=(SERVICES[hid]||[]).filter(s=>!settings.conn[s.id]);
+    if(!list.length) return res(true);
+    const h=HELPERS.find(x=>x.id===hid);
+    openSheet(`<h2>Which of these do you use?</h2><p class="sub">${esc(purpose)} Mark your usual ones; nothing is linked or accessed yet.</p>${list.map(svcRow).join('')}<button class="primary" data-act="perm-all">Use all of these and continue</button><button class="ghost" data-act="perm-skip">Skip, continue without</button>`);
+    permResolve=(ok)=>{permResolve=null;closeSheet();res(ok);}; permList=list;
+  });
+}
+let permResolve=null, permList=[];
+$('sheet').addEventListener('click',e=>{
+  const b=e.target.closest('[data-act],[data-gp],#upKind .chip,#alCond .chip,#tripKind .chip'); if(!b) return; const a=b.dataset.act;
+  if(a==='svc-toggle'){const id=b.dataset.id;settings.conn[id]=settings.conn[id]==='connected'?'declined':'connected';touchSettings();applySettings();renderConnections();const s=svcAll().find(x=>x.id===id);const on=settings.conn[id]==='connected';b.textContent=on?'Connected':'Connect';b.classList.toggle('on',on);toast(on?`${s.name} marked as a store you use`:`${s.name} removed from your stores`);}
+  else if(a==='sheet-close'){closeSheet();}
+  else if(a==='notif-clear'){Notif.markAll();closeSheet();}
+  else if(a==='notif-go'){const n=Notif.list.find(x=>x.id===b.dataset.nid);if(n)n.read=true;Notif.save();closeSheet();if(n&&n.dest){if(n.dest.helper)openHelper(n.dest.helper,'');if(n.dest.reminderId){R.focus=n.dest.reminderId;render();setTimeout(()=>{const el=app.querySelector(`[data-rid="${n.dest.reminderId}"]`);if(el)el.scrollIntoView({block:'center'});},50);}if(n.dest.alertId!==undefined){const i=alerts.findIndex(x=>(x.id||x.need)===n.dest.alertId);if(i>=0)setTimeout(()=>alertHistory(i),50);else toast('That alert no longer exists');}if(n.dest.reminderId&&!reminders.some(r=>r.id===n.dest.reminderId))toast('That reminder no longer exists');}}
+  else if(a==='price-save'){const st=($('upStore').value||'').trim(),pr=($('upPrice').value||'').trim(),k=$('upKind').querySelector('.chip.on');if(!st||!pr){toast('Store and price are needed');return;}userPrices=[{need:A.need.trim(),store:st,price:pr,kind:k?k.dataset.k:'physical',ts:new Date().toISOString()},...userPrices].slice(0,200);save('aisaver.userprices',userPrices);closeSheet();render();}
+  else if(b.dataset.k&&b.closest('#upKind')){$('upKind').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));b.classList.add('on');}
+  else if(a==='saved-edit-save'){const x=saved[+b.dataset.i];const q=($('svQ').value||'').trim();if(x&&q){x.need=q;save('aisaver.saved',saved);closeSheet();toast('Saved search updated');}}
+  else if(a==='saved-run2'){const x=saved[+b.dataset.i];if(!x)return;closeSheet();resetAll();A.need=x.need;if(x.prefs){A.who=x.prefs.who||'';A.online=x.prefs.online||[];A.nearby=x.prefs.nearby||[];if(x.prefs.sort)sortMode=x.prefs.sort;}render();run().then(()=>{x.lastRun=Date.now();if(result&&result.best){x.best=result.best.name||x.best;x.price=result.best.price||x.price;}save('aisaver.saved',saved);});}
+  else if(a==='saved-alert'){const x=saved[+b.dataset.i];if(!x)return;if(!alerts.some(y=>y.need===x.need)){alerts=[{id:'a'+Date.now().toString(36),need:x.need,ref:x.price||'',value:parseFloat(String(x.price||'').replace(/[^\d.]/g,''))||0,status:'active',history:[{at:Date.now(),event:'created',detail:'from saved search'}],ts:Date.now()},...alerts];save('aisaver.alerts',alerts);}closeSheet();toast('Alert created from saved search');}
+  else if(a==='saved-del2'){saved.splice(+b.dataset.i,1);save('aisaver.saved',saved);closeSheet();toast('Removed');}
+  else if(a==='alert-eval'){const x=alerts[+b.dataset.i];if(!x)return;const r=localEvaluate(x);save('aisaver.alerts',alerts);toast(r.triggered?'Condition met':'Evaluated — not met or no eligible price');alertHistory(+b.dataset.i);}
+  else if(a==='alert-save'){const x=alerts[+b.dataset.i];const c=$('alCond').querySelector('.chip.on');const v=parseFloat($('alVal').value);if(!x||!c||!isFinite(v)){toast('Enter a number');return;}x.cond=c.dataset.c;if(x.cond==='drop_pct'){x.value=v;}else{x.ref='AED '+v;x.value=v;}save('aisaver.alerts',alerts);closeSheet();toast('Alert updated');}
+  else if(b.dataset.tk&&b.closest('#tripKind')){TRIP.t.kind=b.dataset.tk;closeSheet();render();}
+  else if(b.dataset.c&&b.closest('#alCond')){$('alCond').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));b.classList.add('on');}
+  else if(a==='prog-save'){const n=($('pName').value||'').trim();if(!n)return;cash.custom.push(n);saveCash();closeSheet();render();}
+  else if(a==='goal-save'){const t=($('gTitle').value||'').trim(),tg=+($('gTarget').value||0),pb=$('gProg').querySelector('.chip.on');if(!t||!tg||!pb){toast('Title, program and target are needed');return;}cash.goals.push({title:t,prog:pb.dataset.gp,target:tg});saveCash();closeSheet();render();}
+  else if(b.dataset.gp){$('gProg').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));b.classList.add('on');}
+  else if(a==='perm-all'){permList.forEach(s=>settings.conn[s.id]='connected');touchSettings();applySettings();renderConnections();toast('Marked as the stores you use');if(permResolve)permResolve(true);}
+  else if(a==='perm-skip'){permList.forEach(s=>{if(!settings.conn[s.id])settings.conn[s.id]='declined';});touchSettings();applySettings();if(permResolve)permResolve(true);}
+});
+$('conn').addEventListener('click',e=>{const b=e.target.closest('[data-act="conn-helper"]');if(b)helperSheet(b.dataset.id);});
+// ===== Shared internal Helper contract (technical only — each helper keeps its own UX)
+// { id, purpose, input, context, connections, open(text) } ; open() receives the original request so handoffs preserve it.
+const HELPER_CONTRACT={
+  saver:{purpose:'Find the best option to buy, nearby and online',input:'item',context:['who','where','stores'],connections:'saver',open:t=>{resetAll();if(t)A.need=t;render();}},
+  reminder:{purpose:'Create and keep reminders, alarms, deadlines',input:'natural sentence',context:['date','type'],connections:'reminder',open:t=>{openReminder();if(t){R.text=t;parseReminder();}}},
+  concierge:{purpose:'Restaurants, bars, clubs, rides, contacts',input:'what tonight',context:['area','people','time','budget'],connections:'concierge',open:t=>{openConcierge();if(t){C.text=t;sendConcierge();}}},
+  cashback:{purpose:'Points, miles, memberships, goals',input:'question',context:['balances','goals'],connections:'cashback',open:()=>openCash()},
+  travel:{purpose:'Flights, hotels, trips',input:'destination and dates',context:['from','who','budget','need'],connections:'travel',open:t=>{TRIP.t=parseTrip(t||'',TRIP.t);openSpec('travel');if(t){SP.cur.text=t;sendSpec();}}},
+  tech:{purpose:'Fix consumer tech problems',input:'problem',context:['device','tried'],connections:null,open:t=>{openSpec('tech');if(t){SP.cur.text=t;sendSpec();}}},
+  legal:{purpose:'Explain rights, risks, next step',input:'situation',context:['where','topic'],connections:null,open:t=>{openSpec('legal');if(t){SP.cur.text=t;sendSpec();}}},
+  movie:{purpose:'What to watch',input:'mood',context:['with','length','services'],connections:'movie',open:t=>{openSpec('movie');if(t){SP.cur.text=t;sendSpec();}}},
+  sport:{purpose:'Sport questions',input:'question',context:['sport','level'],connections:null,open:t=>{openSpec('sport');if(t){SP.cur.text=t;sendSpec();}}}
+};
+function openHelper(id,text){const h=HELPER_CONTRACT[id];if(!h)return false;h.open(text);return true;}
+function goHome(){view='home';busy=false;result=null;err=null;$('hname').textContent='AI HELPER';render();window.scrollTo(0,0);}
+const backToMaster=()=>HANDOFF.text?`<div style="text-align:center;margin-top:14px"><button class="link" data-act="back-master">← Back to master helper</button></div>`:'';
+function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('show'),2200);}
+async function askMaster(){
+  let q=M.q.trim(); if(!q||M.busy) return;
+  if(M.pending){q=`${M.pending} — ${q}`;M.pending=null;}
+  const ref=resolveReference(q); if(ref&&applyReference(ref,q)){M.lastQ=q;return;}
+  if(!Conv.st.lastResult&&/^(the |il |la |lo )?(first|second|third|that one|quello|quella|primo|secondo|terzo|open it|aprilo|save (that|this|it)|salvalo)( one)?$/.test(q.toLowerCase().trim())){M.lastQ=q;M.from='Master helper';M.color='#0a84ff';M.answer='Which result do you mean? I don\'t have a list from this session yet — tell me what you were looking for.';M.busy=false;render();return;}
+  const fp=fastPath(q); if(fp){M.lastQ=q;M.from='Master helper';M.color='#0a84ff';M.answer=fp.answer;M.open=fp.open||null;M.busy=false;render();Speech.say(fp.answer);return;}
+  // short follow-up after a handoff ("make it four", "cheaper") -> continue in the same helper with context, don't restart
+  if(M.lastHelper&&q.split(/\s+/).length<=4&&!/^(hi|hello|ciao|help)/.test(q.toLowerCase())){HANDOFF.text=`${M.lastQ} — ${q}`;Conv.set({request:HANDOFF.text,refined:HANDOFF.text});openHelper(M.lastHelper,HANDOFF.text);M.lastQ=HANDOFF.text;return;}
+  M.lastQ=q; M.open=null; Conv.set({request:q,prevHelper:Conv.st.helper});
+  if(!sample){M.errCode='not_ready';render();return;}
+  M.busy=true;M.answer='';M.errCode=null;render();M.ctl=new AbortController();
+  try{
+    const d=await routeRequest(q);
+    M.busy=false;
+    if(d.question&&(d.confidence===undefined||d.confidence<0.6)){M.from='Master helper';M.color='#0a84ff';M.answer=d.question;M.pending=q;render();Speech.say(d.question);return;}
+    HANDOFF.text=q;
+    M.lastKind=d.kind||'plan'; Conv.set({kind:d.kind||'plan',pending:d.question||null});
+    if(d.helper&&d.helper!=='general'&&HELPER_CONTRACT[d.helper]){const H=HELPERS.find(x=>x.id===d.helper);M.lastHelper=d.helper;Conv.set({helper:d.helper});Speech.say(`Opening ${H?H.name:d.helper}`);openHelper(d.helper,d.helper==='saver'?(d.need||q).trim():q);return;}
+    M.lastHelper=null;
+    const h=HELPERS.find(x=>x.id===d.helper);
+    M.from='Master helper'; M.color='#0a84ff'; M.answer=d.answer||''; Speech.say(M.answer);
+  }catch(e){M.busy=false;if(e.code!=='cancelled')M.errCode=e.code||'failed';}
+  render();
+}
+// ================= SPECIALIST ENGINE (Travel, Tech, Legal, Movie, Sport) =================
+const SPECS={
+ travel:{q:'Where to?',ph:'e.g. Rome 12–16 Oct, two of us',greet:'Tell me where and when. I compare flights, hotels and what to see.',quick:[['Weekend away','A weekend trip from Dubai, ideas within 4 hours flight'],['Flights only','Only flights, cheapest and best time'],['Hotels only','Only hotels'],['Visa info','Do I need a visa?']],
+   details:[{k:'from',l:'From',o:['Dubai','Abu Dhabi','Other']},{k:'who',l:'Who',o:['Solo','Couple','Family','Friends']},{k:'budget',l:'Budget',o:['Economy','Comfort','Luxury']},{k:'need',l:'I need',o:['Flights','Hotels','Both','Full plan']}],
+   role:'AI TRAVEL EXPERT. Compare flights, hotels and plans. Prefer airlines flying from the UAE (Emirates, flydubai, Etihad, Air Arabia). Be concrete on airlines, hotel names, neighbourhoods and typical prices in AED; say prices are typical, not live.',cards:'each option: title=airline+route or hotel name, sub=dates/route/area detail, price=e.g. AED 2,400 return, tag=why this one, link=official https URL if you are sure',svc:'travel'},
+ tech:{q:"What's the problem?",ph:'e.g. iPhone not charging',greet:'Describe what is happening. I walk you through it one step at a time.',quick:[['Wi‑Fi issues','My Wi‑Fi keeps dropping'],['Phone slow','My phone is very slow'],['Set up new device','Help me set up a new device'],['Recover account','I am locked out of an account']],
+   details:[{k:'device',l:'Device',o:['iPhone','Android','Mac','Windows','TV / router','Other']},{k:'tried',l:'Already tried',o:['Nothing yet','Restart','Update','Reset settings']}],
+   role:'AI TECH HELPER. Diagnose and fix consumer tech problems. Give numbered steps, one action each, in the order to try them, with what to expect. If the user says they tried step N (or that it did not work), continue from the next step or adjust the diagnosis — never restart from step 1. Never ask the user to share passwords.',cards:'use cards only for a product or accessory to buy or a support contact: title, sub, price, tag',svc:null},
+ legal:{q:'What happened?',ph:'e.g. landlord keeps my deposit',greet:'Tell me the situation. I explain your position, the risks and the next step. Not a substitute for a lawyer.',quick:[['Rent & landlord','Problem with my landlord or rent contract'],['Work & salary','Problem at work: salary, contract, notice'],['Fines','I got a fine and want to understand it'],['Contract check','Explain a contract clause to me']],
+   details:[{k:'where',l:'Where',o:['Dubai','Abu Dhabi','Other UAE','Italy','Other']},{k:'topic',l:'Topic',o:['Contract','Work','Rent','Fines','Family','Business']}],
+   role:'AI LEGAL HELPER. If the question is about a document clause or general principles, answer without asking for a jurisdiction; ask for the country/emirate only when the answer genuinely depends on it. Explain in plain words: the user\'s position, the risks, the concrete next step, the deadlines and which authority or free service to contact (e.g. RERA, MOHRE, Dubai Courts). Say clearly this is general information, not legal advice.',cards:'use cards for authorities, offices or services to contact: title, sub=what they do, tag=how to reach, link=official https URL if sure',svc:null},
+ movie:{q:'What are you in the mood for?',ph:'e.g. something light, 90 minutes',greet:'Tell me the mood, who is watching and how long you have.',quick:[['Tonight','Something good for tonight'],['Family','A family movie'],['Series','A series to binge'],['Arabic','Something Arabic']],
+   details:[{k:'with',l:'With',o:['Alone','Partner','Family','Friends']},{k:'len',l:'Length',o:['Under 90 min','A movie','A series']},{k:'svc',l:'I have',m:true,o:['Netflix','OSN+','Shahid','Prime Video','Apple TV+','Disney+']}],
+   role:'AI MOVIE EXPERT. Recommend exactly 3 titles that fit the mood and constraints (e.g. not horror, under 2 hours, family). Say which streaming services USUALLY carry each title in the UAE but make clear this is not checked live. No spoilers. For "more like the second" use the previous recommendations in the conversation.',cards:'each title: title=name (year), sub=genre · length · one-line why, tag=where to watch, price empty',svc:'movie'},
+ sport:{q:'Ask me anything about sport',ph:'e.g. how does the F1 sprint format work?',greet:'Rules, tactics, players, training, gear. Ask away.',quick:[['Explain a rule','Explain a rule I never understood'],['Training plan','Give me a simple weekly training plan'],['Gear','What gear should I buy to start?'],['Watch in Dubai','Where can I watch or play in Dubai?']],
+   details:[{k:'sport',l:'Sport',o:['Football','Tennis','F1','Cricket','Padel','Running','Gym','Other']},{k:'level',l:'I am',o:['A fan','A beginner','Regular player','Competitive']}],
+   role:'AI SPORT EXPERT. Answer as a knowledgeable coach and fan. Be accurate about rules and history. You have NO live data: never say you checked current fixtures, scores or standings; say they must be verified on an official source.',cards:'use cards for venues, clubs, courses or gear: title, sub, price, tag, link if sure',svc:null}
+};
+const SP={cur:null,st:{}};
+const TRIP={t:null};
+function specState(h){return SP.st[h]||(SP.st[h]={id:h,text:'',det:{},msgs:[],busy:false,open:false});}
+function openSpec(h){SP.cur=specState(h);if(h==='travel'&&!TRIP.t)TRIP.t=parseTrip('',null);view='spec';const H=HELPERS.find(x=>x.id===h);$('hname').textContent=H.name;render();window.scrollTo(0,0);}
+function specPrompt(st){
+  const sp=SPECS[st.id], city=load('aisaver.city')||'Dubai';
+  const det=sp.details.map(d=>{const v=st.det[d.k];return v&&v.length?`${d.l}: ${Array.isArray(v)?v.join(', '):v}`:null}).filter(Boolean).join('; ');
+  const acc=sp.svc?(SERVICES[sp.svc]||[]).filter(x=>settings.conn[x.id]==='connected').map(x=>x.name).join(', '):'';
+  const hist=st.msgs.slice(-8).map(m=>`${m.role==='me'?'User':'Helper'}: ${m.text}${m.steps&&m.steps.length?' [steps given: '+m.steps.map((x,i)=>(i+1)+') '+x).join(' ')+']':''}`).join('\n');
+  const hc=handoffContext(); const known=Object.entries(hc.entities||{}).filter(([k,v])=>v).map(([k,v])=>`${k}: ${v}`).join(', ');
+  const trip=st.id==='travel'&&TRIP.t?` Trip (structured, authoritative): ${JSON.stringify(TRIP.t)}. Use these values; do not ask for them again. For each option give a realistic typical price range as an estimate and say it is not live.`:'';
+  return `You are ${sp.role} The user is based in ${city}. Now is ${new Date().toString()}.${det?` Details the user set: ${det}.`:''}${trip}${known?` Already known from the conversation (do not ask again): ${known}.`:''}${acc?` Connected accounts: ${acc}.`:''}
+Conversation so far:\n${hist}
+Keep "reply" short (1-3 sentences) and put substance in cards or steps. Cards: ${sp.cards}. Steps: numbered actions when the answer is a procedure, otherwise empty. Ask at most one clarifying question and only if truly needed.
+Reply with ONLY JSON: {"reply":"text","cards":[{"title":"","sub":"","price":"","tag":"","link":""}],"steps":["",""],"note":"one-line caveat or empty"}`;
+}
+function sportLiveGuard(t){const q=t.toLowerCase();if(/\b(what games? (are|is) on|tonight|today|right now|live score|result|results|standings|table|classifica|risultat|partite (ci sono|oggi|stasera)|che partite)\b/.test(q)&&!Caps.can('sport.results_live'))return `Live fixtures, scores and standings aren't connected here, so I won't guess them. For today's games check the official competition site or a live-score app; I can explain rules, history, tactics or a team's background if you tell me which competition.`;return '';}
+async function sendSpec(){
+  const st=SP.cur; const t=st.text.trim(); if(!t||st.busy) return;
+  if(st.id==='sport'){const g=sportLiveGuard(t);if(g){st.msgs.push({role:'me',text:t});st.msgs.push({role:'ai',text:g,cards:[],steps:[]});st.text='';render();scrollBottom();return;}}
+  if(st.id==='travel'){TRIP.t=parseTrip(t,TRIP.t);const q=tripQuestion(TRIP.t);if(q){st.msgs.push({role:'me',text:t});st.msgs.push({role:'ai',text:q,cards:[],steps:[],ask:true});st.text='';render();scrollBottom();return;}}
+  if(!sample){st.msgs.push({role:'me',text:t});st.msgs.push({role:'ai',text:'',cards:[],steps:[],err:'not_ready'});st.text='';render();return;}
+  st.msgs.push({role:'me',text:t}); st.text=''; st.busy=true; render(); scrollBottom();
+  try{const d=await sample.json(specPrompt(st),{modelTier:'default',cache:false});let cards=Array.isArray(d.cards)?d.cards.filter(c=>c&&c.title).slice(0,4):[];
+    if(st.id==='travel'&&Engine.name==='http'){try{const r=await fetch('/api/travel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'flights',from:'DXB',to:'',out:'',back:'',adults:1})});const j=r.ok?await r.json():null;if(j&&j.results&&j.results.length)cards=[...j.results.slice(0,4).map(o=>({title:o.title,sub:`${o.provider} · ${o.dates.out||''}${o.dates.back?' → '+o.dates.back:''}`,price:`${o.currency||''} ${o.price}`,label:o.label,bookingPath:o.bookingPath&&o.bookingPath.type,link:o.bookingPath&&o.bookingPath.url})),...cards];}catch(e){}}
+    st.msgs.push({role:'ai',text:d.reply||'',cards,steps:Array.isArray(d.steps)?d.steps.filter(Boolean).slice(0,10):[],note:d.note||(st.id==='travel'?'Prices shown as AI estimate until a flight/hotel source is connected.':'')}); Conv.set({helper:st.id}); if(cards.length)Conv.result(st.id,cards.map(c=>({title:c.title,price:c.price,url:c.link})),t);}
+  catch(e){st.msgs.push({role:'ai',text:'',cards:[],steps:[],err:e.code||'failed',retry:t});}
+  st.busy=false; st.msgs=st.msgs.slice(-30); render(); scrollBottom();
+}
+function specCard(c,i){const u=safeUrl(c.link);const lab=c.label||(c.price?'AI_ESTIMATE':(c.unavailable?'UNAVAILABLE':null));if(c.baggage===undefined&&SP.cur&&SP.cur.id==='travel')c.sub=(c.sub?c.sub+' · ':'')+'baggage and availability not provided';return `<div class="card2 ${i===0?'top':''}"><div class="h"><b>${esc(c.title)}</b>${c.price?`<span class="pr">${esc(c.price)}</span>`:''}</div>${lab?`<div style="margin-top:4px">${lblHtml(lab)}${c.bookingPath?` <span class="lbl">${esc(BOOKPATH[c.bookingPath]||c.bookingPath)}</span>`:''}</div>`:''}${c.sub?`<div class="sb">${esc(c.sub)}</div>`:''}${c.tag?`<span class="tag">${esc(c.tag)}</span>`:''}${u?`<div class="ra"><a href="${esc(u)}" target="_blank" rel="noopener">Open</a></div>`:''}</div>`;}
+function renderSpec(){
+  const st=SP.cur, sp=SPECS[st.id], H=HELPERS.find(x=>x.id===st.id);
+  const av=`<span class="av" style="background:${H.color}">${H.ico.replace('<svg','<svg width="15" height="15"')}</span>`;
+  const dets=sp.details.map(d=>`<div class="det"><div class="l">${d.l}</div><div class="chips">${d.o.map(o=>{const v=st.det[d.k];const on=d.m?(v||[]).includes(o):v===o;return `<button class="chip ${on?'on':''}" data-act="spec-det" data-k="${d.k}" data-o="${esc(o)}" data-m="${d.m?1:0}">${esc(o)}</button>`;}).join('')}</div></div>`).join('');
+  const setCount=sp.details.filter(d=>{const v=st.det[d.k];return v&&v.length;}).length;
+  const tripBar=st.id==='travel'&&TRIP.t?(()=>{const T=TRIP.t;const c=(k,l,v)=>`<button class="chip ${v?'':'missing'}" data-act="trip-edit" data-k="${k}">${l}: ${v||'add'}</button>`;return `<div class="trip">${c('kind','Need',{flight:'Flights',hotel:'Hotels',both:'Flights + hotel'}[T.kind||'flight'])}${c('from','From',cityName(T.from))}${c('to','To',cityName(T.to))}${c('out','Date',T.out)}${(T.kind||'flight')!=='flight'||T.back?c('back','Return',T.back):''}${c('adults','Travellers',T.adults)}${T.prefs.direct?'<span class="chip on">Direct</span>':''}${T.prefs.baggage?'<span class="chip on">Checked bag</span>':''}</div>`;})():'';
+  app.innerHTML=`<section class="step" style="margin-top:8px"><h2>${sp.q}</h2>${tripBar}<div class="field"><input id="stext" value="${esc(st.text)}" placeholder="${esc(sp.ph)}" enterkeyhint="send" autocomplete="off"><button class="rb mic" data-act="mic-spec" aria-label="Speak">${ico.mic}</button><button class="rb go" data-act="spec-send" aria-label="Send">${ico.up}</button></div>
+  <button class="dtoggle" data-act="spec-toggle">${st.open?'Hide details':'Details'}${setCount?` · ${setCount} set`:' (optional)'}</button>${st.open?`<div class="dets">${dets}</div>`:''}</section>
+  <div class="quick" style="margin-top:14px">${sp.quick.map(([l,q])=>`<button data-act="spec-quick" data-q="${esc(q)}">${esc(l)}</button>`).join('')}</div>
+  <div class="chat">${st.msgs.length?'':`<div class="airow">${av}<div class="bub ai">${esc(sp.greet)}</div></div>`}
+  ${st.msgs.map(m=>m.role==='me'?`<div class="bub me">${esc(m.text)}</div>`:m.err?stateHtml('error',{code:m.err})+(m.retry?`<div style="margin-left:36px"><button class="link" data-act="spec-retry" data-q="${esc(m.retry)}">Retry</button></div>`:''):(!m.text&&!(m.cards&&m.cards.length)&&!(m.steps&&m.steps.length))?stateHtml('empty',{text:'No result for that — try rephrasing or add a detail.'}):`<div class="airow">${av}<div class="bub ai">${esc(m.text)}</div></div>${(m.cards||[]).map(specCard).join('')}${m.steps&&m.steps.length?`<div class="steps"><ol>${m.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></div>`:''}${m.note?`<div class="disc">${esc(m.note)}</div>`:''}`).join('')}
+  ${st.busy?`<div class="airow">${av}<div class="bub ai"><span class="spin" style="display:inline-block;vertical-align:middle"></span></div></div>`:''}
+  ${st.id==='travel'&&TRIP.t&&TRIP.t.to&&st.msgs.some(m=>m.role==='ai'&&!m.ask)?`<div class="offer card2"><div class="h"><b>Check live prices and book</b></div><div class="sb">${Caps.can('travel.live_flights')?'Live fares shown above.':'Live fares are not connected here — these open the provider with your trip prefilled. Nothing is booked.'}</div><div class="links">${tripLinks(TRIP.t).map((x,i)=>`<a class="${i===0?'primary-ish':''}" href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.l)}</a>`).join('')}</div></div>`:''}
+  ${st.id==='legal'?`<div class="disc" style="margin-left:0;margin-top:6px">General information, not legal advice. For decisions with money or deadlines at stake, check with a licensed lawyer.</div>`:''}${(()=>{const n=Caps.note({travel:'travel.live_flights',sport:'sport.results_live',movie:'movie.streaming_live'}[st.id]||'');return n?`<div class="cap">${esc(n)}</div>`:'';})()}</div>${backToMaster()}`;
+}
+
+// ================= AI CASH BACK =================
+let cash=Object.assign({pts:{},custom:[],goals:[]},load('aisaver.cash')||{});
+const saveCash=()=>save('aisaver.cash',cash);
+const K={q:'',busy:false,answer:''};
+function openCash(){view='cashback';$('hname').textContent='AI CASH BACK';render();window.scrollTo(0,0);}
+function cashPrograms(){return [...(SERVICES.cashback||[]),...cash.custom.map(n=>({id:'c_'+n.toLowerCase().replace(/\W+/g,''),name:n,c:'#636366',why:'Added by you'}))];}
+function renderCash(){
+  const progs=cashPrograms(); const conn=progs.filter(p=>settings.conn[p.id]==='connected'||cash.pts[p.id]);
+  const total=Object.values(cash.pts).reduce((a,b)=>a+(+b||0),0);
+  app.innerHTML=`<div class="rhead"><b>My rewards</b><span>${conn.length} program${conn.length===1?'':'s'}</span></div>
+  <div class="kpi"><div><b>${total.toLocaleString('en')}</b><small>points & miles</small></div><div><b>${cash.goals.length}</b><small>goals</small></div><div><b>${progs.filter(p=>settings.conn[p.id]==='connected').length}</b><small>connected</small></div></div>
+  <div class="sec-lbl">Programs</div><div class="rlist">${progs.map(p=>`<div class="prog"><span class="lg" style="background:${p.c}">${esc(p.name.slice(0,2).toUpperCase())}</span><div class="nm">${esc(p.name)}<small>${cash.pts[p.id]?'Entered by you':'Enter your balance (entered by you, not synced)'}</small></div><input inputmode="numeric" aria-label="${esc(p.name)} balance" data-pts="${p.id}" value="${esc(cash.pts[p.id]||'')}" placeholder="0">${p.id.startsWith('c_')?`<button class="st" data-act="cash-prog-del" data-id="${p.id}">Remove</button>`:''}</div>`).join('')}</div>
+  <div class="chips" style="margin-top:10px"><button class="chip add" data-act="cash-add">+ Add a program</button><button class="chip" data-act="cash-connect">Connect accounts</button></div>
+  <div class="sec-lbl">Goals</div><div class="rlist">${cash.goals.length?cash.goals.map((g,i)=>{const cur=+cash.pts[g.prog]||0,pct=Math.min(100,Math.round(cur/g.target*100));return `<div class="goal"><div style="flex:1;min-width:0"><div style="font-weight:500">${esc(g.title)}</div><div class="rs" style="font-size:.8em;color:var(--ink-2)">${esc(progName(g.prog))} · ${cur.toLocaleString('en')} / ${(+g.target).toLocaleString('en')} · ${pct}%</div><div class="bar"><i style="width:${pct}%"></i></div></div><button class="st" data-act="cash-goal-del" data-i="${i}">Remove</button></div>`;}).join(''):`<div class="empty">No goals yet — e.g. "Business class to Milan, 90,000 Skywards miles".</div>`}</div>
+  <div class="chips" style="margin-top:10px"><button class="chip add" data-act="cash-goal">+ Add a goal</button></div>
+  <div class="sec-lbl">Ask</div><div class="field"><input id="ktext" value="${esc(K.q)}" placeholder="e.g. best way to reach my goal faster?" enterkeyhint="send" autocomplete="off"><button class="rb go" data-act="cash-ask" aria-label="Ask">${ico.up}</button></div>
+  ${K.busy?`<div class="status" style="margin-top:10px"><span class="spin"></span><span>Thinking…</span></div>`:''}${K.answer?`<div class="answer"><div class="from"><i style="background:#ff9500"></i>AI CASH BACK</div>${esc(K.answer)}</div>`:''}`;
+}
+function progName(id){const p=cashPrograms().find(x=>x.id===id);return p?p.name:id;}
+async function cashAsk(){const q=K.q.trim();if(!q||K.busy)return;if(!sample){toast('AI is unavailable in this view');return;}K.busy=true;K.answer='';render();
+  const state=cashPrograms().map(p=>`${p.name}: ${cash.pts[p.id]||0}`).join(', ');const goals=cash.goals.map(g=>`${g.title} (${progName(g.prog)}, target ${g.target})`).join('; ');
+  try{const d=await sample.json(`You are AI CASH BACK, an expert on loyalty programs, points, miles and cashback for a user in ${load('aisaver.city')||'Dubai'}. Their balances: ${state||'none entered'}. Goals: ${goals||'none'}. Question: "${q}". Answer in max 120 words, plain text, concrete and honest (rules change; suggest checking the program site). Reply ONLY JSON: {"answer":"text"}`,{modelTier:'quick',cache:false});K.answer=d.answer||'';}catch(e){K.answer='Could not answer right now.';}
+  K.busy=false;render();}
+function goalSheet(){const progs=cashPrograms();openSheet(`<h2>New goal</h2><p class="sub">What are you saving points for?</p><input class="txt" id="gTitle" placeholder="e.g. Business class to Milan"><div class="chips" style="margin-top:10px" id="gProg">${progs.map((p,i)=>`<button class="chip ${i===0?'on':''}" data-gp="${p.id}">${esc(p.name)}</button>`).join('')}</div><input class="txt" id="gTarget" inputmode="numeric" placeholder="Points needed, e.g. 90000" style="margin-top:10px"><button class="primary" data-act="goal-save" style="margin-top:14px">Save goal</button>`);}
+
+// ================= AI CONCIERGE =================
+const C={msgs:[],busy:false,text:''};
+function openConcierge(){view='concierge';$('hname').textContent='AI CONCIERGE';C.text='';C.busy=false;render();window.scrollTo(0,0);}
+const CQUICK=[['Dinner','Find me a place for dinner tonight','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h16"/><path d="M6 14a6 6 0 0 1 12 0"/><path d="M5 18h14"/></svg>'],['Drinks','Somewhere good for drinks tonight','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3h8l-1 9a3 3 0 0 1-6 0z"/><path d="M12 15v6M9 21h6"/></svg>'],['Club','Best club tonight','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>'],['Taxi','I need a taxi','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14l-1-6H6z"/><path d="M7 11l1-4h8l1 4"/><circle cx="8" cy="19" r="1.5"/><circle cx="16" cy="19" r="1.5"/></svg>'],['Café','A good café nearby','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h12v6a5 5 0 0 1-10 0z"/><path d="M16 10h2a2 2 0 0 1 0 4h-2"/><path d="M6 20h10"/></svg>'],['Things to do','Attractions or activities today','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4 1 6-5.5-3-5.5 3 1-6L3 10l6-1z"/></svg>'],['Services','A practical local service (plumber, pharmacy, laundry)','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 7l3-3 3 3-3 3z"/><path d="M3 21l9-9"/></svg>']];
+function conPrompt(){
+  const city=A&&A.whereCity&&A.whereCity.trim()||load('aisaver.city')||'Dubai';
+  const hist=C.msgs.slice(-8).map(m=>`${m.role==='me'?'User':'Concierge'}: ${m.role==='me'?m.text:(m.text+(m.picks&&m.picks.length?' [suggested: '+m.picks.map(p=>p.name).join(', ')+']':''))}`).join('\n');
+  const acc=(SERVICES.concierge||[]).filter(s=>settings.conn[s.id]==='connected').map(s=>s.name).join(', ');
+  const hc=handoffContext(); const known=Object.entries(hc.entities||{}).filter(([k,v])=>v).map(([k,v])=>`${k}: ${v}`).join(', ');
+  return `You are AI CONCIERGE, a warm, efficient hotel-style concierge for a user based in ${city}. Now is ${new Date().toString()}.${known?` Already known (never ask again): ${known}.`:''}${acc?` The user has connected: ${acc}.`:''}
+Conversation so far:\n${hist}
+Rules: keep replies to 1-2 short sentences, like a real concierge. If a key detail is missing (area, how many people, time, budget) ask for at most one, but still give picks when you reasonably can, assuming sensible defaults and saying them. For places, give 2-3 real, well-known venues in ${city} that fit; be honest that availability must be confirmed. Categories: restaurant, cafe, attraction, activity, service, venue — set "kind" accordingly. For taxi requests, propose the ride (from, to, time). For contacts, give the type of contact and how to reach it.
+Reply with ONLY JSON: {"reply":"text","picks":[{"name":"venue","area":"district","why":"one line","price":"e.g. AED 220 pp","time":"e.g. 20:30 likely free","mins":"12 min by taxi","kind":"restaurant|cafe|attraction|activity|service|venue|taxi|contact"}]}`;
+}
+async function sendConcierge(){
+  const t=C.text.trim(); if(!t||C.busy) return; if(!sample){toast('AI is unavailable in this view');return;}
+  C.msgs.push({role:'me',text:t}); C.text=''; C.busy=true; render(); scrollBottom();
+  try{const d=await sample.json(conPrompt(),{modelTier:'default',cache:false});let picks=Array.isArray(d.picks)?d.picks.slice(0,3):[];
+    if(Engine.name==='http'){try{const r=await fetch('/api/concierge',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:t,city:load('aisaver.city')||'Dubai'})});const j=r.ok?await r.json():null;if(j&&j.results&&j.results.length)picks=j.results.slice(0,3).map(x=>({name:x.name,area:x.location,why:x.category,price:'',time:x.openNow===true?'Open now':x.openNow===false?'Closed now':'',mins:x.rating?`★ ${x.rating}`:'',kind:/restaurant|cafe|bar/.test(x.category)?'restaurant':'venue',source:'google_places',phone:x.phone,website:x.website}));}catch(e){}}
+    C.msgs.push({role:'ai',text:d.reply||'',picks}); Conv.set({helper:'concierge'}); if(picks.length)Conv.result('concierge',picks.map(p=>({title:p.name,price:p.price,when:p.time,area:p.area,kind:p.kind||'venue',rating:p.source==='google_places'&&p.mins?parseFloat(String(p.mins).replace('★','')):null,openNow:p.source==='google_places'?(p.time==='Open now'?true:p.time==='Closed now'?false:null):null,distance:null,url:p.website||null,phone:p.phone||null})),t);}
+  catch(e){C.msgs.push({role:'ai',text:'',picks:[],err:e.code||'failed'});}
+  C.busy=false; C.msgs=C.msgs.slice(-30); render(); scrollBottom();
+}
+function scrollBottom(){requestAnimationFrame(()=>window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'}));}
+const conAv='<span class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19h18"/><path d="M4 17a8 8 0 0 1 16 0"/><path d="M12 9V6"/><path d="M10 6h4"/></svg></span>';
+function pickHtml(p,i){const isTaxi=p.kind==='taxi',isContact=p.kind==='contact';return `<div class="pick ${i===0?'top':''}"><div class="h"><b>${esc(p.name)}</b>${p.time?`<span>${esc(p.time)}</span>`:''}</div><div class="d">${esc([p.area,p.why,p.price,p.mins].filter(Boolean).join(' · '))}</div><div style="font-size:.72em;color:var(--ink-3);margin-top:2px">${p.source==='google_places'?'Google Places · live listing':'AI suggestion · availability to confirm'}</div><div class="ra">${isContact?`<button class="b" data-act="con-act" data-k="contact" data-n="${esc(p.name)}" data-a="${esc(p.area||'')}">Find contact</button>`:isTaxi?`<button class="b" data-act="con-act" data-k="taxi" data-n="${esc(p.name)}" data-a="${esc(p.area||'')}">Ride</button>`:`<button class="b" data-act="con-act" data-k="book" data-n="${esc(p.name)}" data-a="${esc(p.area||'')}">Book</button><button data-act="con-act" data-k="call" data-n="${esc(p.name)}" data-a="${esc(p.area||'')}">Call</button><button data-act="con-act" data-k="taxi" data-n="${esc(p.name)}" data-a="${esc(p.area||'')}">Taxi</button>`}</div></div>`;}
+function renderConcierge(){
+  app.innerHTML=`<div class="quick">${CQUICK.map(([l,q,i])=>`<button data-act="con-quick" data-q="${esc(q)}">${i}${l}</button>`).join('')}</div>
+  <div class="chat">${C.msgs.length?'':`<div class="airow">${conAv}<div class="bub ai">Good evening. Dinner, drinks, a club, a taxi or a contact — what can I arrange?</div></div>`}
+  ${C.msgs.map(m=>m.role==='me'?`<div class="bub me">${esc(m.text)}</div>`:m.err?stateHtml('error',{code:m.err}):`<div class="airow">${conAv}<div class="bub ai">${esc(m.text)}</div></div>${(m.picks||[]).map(pickHtml).join('')}`).join('')}
+  ${C.busy?`<div class="airow">${conAv}<div class="bub ai"><span class="spin" style="display:inline-block;vertical-align:middle"></span></div></div>`:''}</div>
+  ${Caps.note('concierge.discovery')?`<div class="cap">${esc(Caps.note('concierge.discovery'))}</div>`:''}${backToMaster()}<div class="cbar"><div class="field"><input id="ctext" value="${esc(C.text)}" placeholder="Ask your concierge…" enterkeyhint="send" autocomplete="off"><button class="rb mic" data-act="mic-con" aria-label="Speak">${ico.mic}</button><button class="rb go" data-act="con-send" aria-label="Send">${ico.up}</button></div></div>`;
+}
+// Action model V1: DISCOVER -> RECOMMEND -> USER EXPLICIT ACTION. Everything below is a DEEP LINK (opens the provider); no booking API is live.
+function deepLinks(p){const q=encodeURIComponent(`${p.name} ${p.area||''} Dubai`.trim()),n=encodeURIComponent(p.name);return {
+  maps:{l:'Open in Maps',u:`https://www.google.com/maps/search/?api=1&query=${q}`,t:'Discovery · deep link'},
+  book:{l:'Book (OpenTable)',u:`https://www.opentable.com/s?term=${n}&covers=2`,t:'Deep link · not a booking API'},
+  eat:{l:'Eat App',u:`https://eatapp.co/dubai-restaurants?q=${n}`,t:'Deep link'},
+  careem:{l:'Careem',u:`https://app.careem.com/`,t:'Ride · opens the app'},
+  uber:{l:'Uber',u:`https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[nickname]=${n}`,t:'Ride · deep link with destination'},
+  talabat:{l:'Talabat',u:`https://www.talabat.com/uae/search?q=${n}`,t:'Delivery · deep link'}};}
+function conAction(k,n,area){
+  const p={name:n,area:area||''}; const L=deepLinks(p);
+  const set={book:[L.book,L.eat,L.maps],call:[L.maps],taxi:[L.uber,L.careem],contact:[L.maps]}[k]||[L.maps];
+  openSheet(`<h2>${esc(n)}</h2><p class="sub">${k==='call'?'Phone numbers come from Maps: open the listing and tap Call.':k==='contact'?'Save from the Maps listing (share sheet → Contacts).':'You confirm on the provider — AI CONCIERGE does not book on your behalf yet.'}</p><div style="display:flex;flex-direction:column;gap:8px">${set.map(x=>`<a class="dl" href="${x.u}" target="_blank" rel="noopener">${x.l} <small>· ${x.t}</small></a>`).join('')}</div><button class="ghost" data-act="sheet-close" style="margin-top:10px">Close</button>`);
+}
+// ================= AI REMINDER =================
+let reminders=Array.isArray(load('aisaver.reminders'))?load('aisaver.reminders'):[];
+const R={text:'',draft:null,busy:false,filter:'today',editing:null,focus:null,form:{title:'',when:'',type:'payment',repeat:'none',alert:'1d'}};
+const RTYPES={payment:'Payment',appointment:'Appointment',deadline:'Deadline',alarm:'Alarm'};
+const RTICO={payment:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>',appointment:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',deadline:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>',alarm:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0v5l2 3H4l2-3z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>'};
+const saveRem=()=>save('aisaver.reminders',reminders);
+// ICS export — standard calendar file (works in Apple Calendar, Google Calendar, Outlook). Native iOS Reminders write access = [ NATIVE DEPENDENCY ].
+function icsFor(list){const pad=n=>String(n).padStart(2,'0');const dt=d=>`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;const esc2=t=>String(t||'').replace(/[\\;,]/g,m=>'\\'+m).replace(/\n/g,'\\n');
+  const rr={daily:'FREQ=DAILY',weekly:'FREQ=WEEKLY',monthly:'FREQ=MONTHLY',yearly:'FREQ=YEARLY'};const al={'0':'PT0M','15m':'-PT15M','1h':'-PT1H','1d':'-P1D','1w':'-P1W'};
+  const ev=list.map(r=>{const d=new Date(r.when);if(isNaN(d))return '';const e=new Date(d.getTime()+36e5);return ['BEGIN:VEVENT',`UID:aihelper-${r.id}@ai-helper`,`DTSTAMP:${dt(new Date())}`,r.allDay?`DTSTART;VALUE=DATE:${dt(d).slice(0,8)}`:`DTSTART:${dt(d)}`,r.allDay?'':`DTEND:${dt(e)}`,`SUMMARY:${esc2(r.title)}`,r.place?`LOCATION:${esc2(r.place)}`:'',`CATEGORIES:${RTYPES[r.type]||''}`,rr[r.repeat]?`RRULE:${rr[r.repeat]}`:'',al[r.alert]?`BEGIN:VALARM\nTRIGGER:${al[r.alert]}\nACTION:DISPLAY\nDESCRIPTION:${esc2(r.title)}\nEND:VALARM`:'','END:VEVENT'].filter(Boolean).join('\n');}).filter(Boolean).join('\n');
+  return `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//AI HELPER//AI REMINDER//EN\nCALSCALE:GREGORIAN\n${ev}\nEND:VCALENDAR\n`;}
+function exportIcs(list,name){const ics=icsFor(list);if(!ics.includes('BEGIN:VEVENT')){toast('Nothing to export');return;}
+  if(Engine.name!=='http'){navigator.clipboard&&navigator.clipboard.writeText(ics).then(()=>toast('Calendar file copied — paste into a .ics file. Direct download works on the web version.')).catch(()=>toast('Download available on the web version'));return;}
+  try{const b=new Blob([ics],{type:'text/calendar'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove();},500);toast('Calendar file ready — open it to add to your calendar');}catch(e){navigator.clipboard&&navigator.clipboard.writeText(ics).then(()=>toast('Calendar file copied — paste into a .ics file')).catch(()=>toast('Could not export on this device'));}}
+function openReminder(){view='reminder';$('hname').textContent='AI REMINDER';R.text='';R.draft=null;R.busy=false;render();window.scrollTo(0,0);}
+const fmtDay=d=>d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+const fmtTime=d=>d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+const isSameDay=(a,b)=>a.toDateString()===b.toDateString();
+function whenLabel(r){const d=new Date(r.when);if(isNaN(d))return 'No date';const now=new Date();const t=r.allDay?'':' · '+fmtTime(d);return (isSameDay(d,now)?'Today':isSameDay(d,new Date(now.getTime()+864e5))?'Tomorrow':fmtDay(d))+t;}
+const repeatLbl={none:'',daily:'Daily',weekly:'Weekly',monthly:'Monthly',yearly:'Yearly'};
+const alertLbl={'0':'At time','15m':'15 min before','1h':'1 hour before','1d':'1 day before','1w':'1 week before'};
+function remPrompt(text){const now=new Date();return `You are AI REMINDER. Turn the user's sentence into one reminder. Now is ${now.toString()} (use this timezone). The user wrote: "${text}".
+Rules: pick the most likely date and time; if no time given use 09:00 for payments/deadlines and keep the time if the user said one; if the user says a weekday, take the next occurrence. type is one of payment, appointment, deadline, alarm. repeat is one of none, daily, weekly, monthly, yearly (payments like rent, bills, subscriptions are usually monthly). alert is one of 0, 15m, 1h, 1d, 1w (1d for payments and deadlines, 1h for appointments, 0 for alarms).
+Reply with ONLY JSON: {"title":"short title","when":"ISO 8601 local datetime like 2026-10-02T09:00:00","allDay":false,"type":"payment","repeat":"monthly","alert":"1d","place":"place or empty"}`;}
+// Natural-date pre-parser: handles the common shapes locally, deterministically; the engine only gets what this can't resolve.
+function preParseReminder(text){
+  const t=text.trim(); const lower=t.toLowerCase(); const now=new Date(); let d=null; let repeat='none'; let title=t;
+  const pad=n=>String(n).padStart(2,'0'); const iso=x=>`${x.getFullYear()}-${pad(x.getMonth()+1)}-${pad(x.getDate())}T${pad(x.getHours())}:${pad(x.getMinutes())}:00`;
+  const strip=re=>{title=title.replace(re,'').replace(/\s{2,}/g,' ').trim();};
+  let m;
+  if((m=lower.match(/\bin (\d+|an?|one|two|three|four|five|six|ten) (minute|hour|day|week)s?\b/))){const n={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,ten:10}[m[1]]||parseInt(m[1],10);d=new Date(now);({minute:()=>d.setMinutes(d.getMinutes()+n),hour:()=>d.setHours(d.getHours()+n),day:()=>d.setDate(d.getDate()+n),week:()=>d.setDate(d.getDate()+7*n)})[m[2]]();strip(new RegExp(m[0],'i'));}
+  const days=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  if(!d&&(m=lower.match(/\b(every|ogni) (monday|tuesday|wednesday|thursday|friday|saturday|sunday|day|week|month|year)\b/))){const w=days.indexOf(m[2]);if(w>=0){d=new Date(now);d.setDate(d.getDate()+((w-d.getDay()+7)%7||7));repeat='weekly';}else{repeat={day:'daily',week:'weekly',month:'monthly',year:'yearly'}[m[2]];d=new Date(now);d.setDate(d.getDate()+1);}strip(new RegExp(m[0],'i'));}
+  if(!d&&(m=lower.match(/\b(next |this )?(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/))){const w=days.indexOf(m[2]);d=new Date(now);d.setDate(d.getDate()+((w-d.getDay()+7)%7||7));strip(new RegExp(m[0],'i'));}
+  if(!d&&/\btomorrow\b|\bdomani\b/.test(lower)){d=new Date(now);d.setDate(d.getDate()+1);strip(/\btomorrow\b|\bdomani\b/i);}
+  if(!d&&/\btoday\b|\boggi\b|\btonight\b|\bstasera\b/.test(lower)){d=new Date(now);if(/tonight|stasera/.test(lower))d.setHours(20,0,0,0);strip(/\btoday\b|\boggi\b|\btonight\b|\bstasera\b/i);}
+  if(!d)return null;
+  if((m=lower.match(/\b(?:at|alle)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b/))){let h=parseInt(m[1],10);if(m[3]==='pm'&&h<12)h+=12;if(m[3]==='am'&&h===12)h=0;d.setHours(h,m[2]?parseInt(m[2],10):0,0,0);strip(new RegExp(m[0],'i'));}
+  else if(/\bmorning\b|\bmattina\b/.test(lower)){d.setHours(9,0,0,0);strip(/\b(in the )?morning\b|\b(di )?mattina\b/i);}
+  else if(/\bafternoon\b|\bpomeriggio\b/.test(lower)){d.setHours(15,0,0,0);strip(/\b(in the )?afternoon\b|\b(di )?pomeriggio\b/i);}
+  else if(/\bevening\b|\bsera\b/.test(lower)){d.setHours(19,0,0,0);strip(/\b(in the )?evening\b|\b(di )?sera\b/i);}
+  else if(!/in \d+|in an?|in (one|two|three|four|five|six|ten)/.test(lower)&&d.getHours()===now.getHours()&&d.getMinutes()===now.getMinutes()){d.setHours(9,0,0,0);}
+  title=title.replace(/^(remind me to|remind me|ricordami di|ricordami|reminder:?)\s*/i,'').trim()||t;
+  const type=/pay|bill|rent|invoice|paga|bolletta|affitto/.test(lower)?'payment':/call|meet|dentist|doctor|appointment|chiama|appuntamento/.test(lower)?'appointment':/expire|deadline|renew|scad|rinnov/.test(lower)?'deadline':/wake|alarm|sveglia/.test(lower)?'alarm':'deadline';
+  return {title:title.charAt(0).toUpperCase()+title.slice(1),when:iso(d),allDay:false,type,repeat,alert:type==='appointment'?'1h':type==='alarm'?'0':'1d',place:''};
+}
+function correctDraft(text,draft){ // applies a correction to an existing draft; returns true if handled
+  if(!draft)return false; const t=text.toLowerCase().trim(); const d=new Date(draft.when); let m,h=false;
+  const days=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'],itd=['domenica','lunedì','martedì','mercoledì','giovedì','venerdì','sabato'];
+  if((m=t.match(/\b(every|ogni)\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica|day|week|month|year|giorno|settimana|mese|anno)(?![a-z])/))){const w=days.indexOf(m[2])>=0?days.indexOf(m[2]):itd.indexOf(m[2]);if(w>=0){d.setDate(d.getDate()+((w-d.getDay()+7)%7));draft.repeat='weekly';}else draft.repeat={day:'daily',giorno:'daily',week:'weekly',settimana:'weekly',month:'monthly',mese:'monthly',year:'yearly',anno:'yearly'}[m[2]];h=true;}
+  else if((m=t.match(/\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica)(?![a-z])/))){const w=days.indexOf(m[1])>=0?days.indexOf(m[1]):itd.indexOf(m[1]);d.setDate(d.getDate()+((w-d.getDay()+7)%7||7));h=true;}
+  if(/\b(tomorrow|domani)\b/.test(t)){const n=new Date();d.setFullYear(n.getFullYear(),n.getMonth(),n.getDate()+1);h=true;}
+  if((m=t.match(/\b(?:at|alle|to|a)\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)?(?![\d:])/))){let hh=parseInt(m[1],10);if(m[3]==='pm'&&hh<12)hh+=12;if(m[3]==='am'&&hh===12)hh=0;d.setHours(hh,m[2]?parseInt(m[2],10):0,0,0);h=true;}
+  if(/\b(no repeat|once|una volta|non ripetere)\b/.test(t)){draft.repeat='none';h=true;}
+  if(!h)return false; const pad=n=>String(n).padStart(2,'0'); draft.when=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`; return true;
+}
+async function parseReminder(){
+  const t=R.text.trim(); if(!t) return;
+  if(R.draft&&/^(no,?|actually|invece|anzi|instead|make it|set it|change|move|put|spost\w*|cambia\w*|metti\w*|rather)\b|\b(instead|invece)\b/.test(t.toLowerCase())&&correctDraft(t,R.draft)){R.text='';render();return;}
+  const local=preParseReminder(t); if(local){R.draft=local;R.busy=false;if(settings.rem==='form'){Object.assign(R.form,{title:local.title,when:local.when.slice(0,16),type:local.type,repeat:local.repeat,alert:local.alert});R.draft=null;}render();return;}
+  if(!sample){toast('AI is unavailable in this view');return;}
+  R.busy=true;R.draft=null;render();
+  try{const d=await sample.json(remPrompt(t),{modelTier:'quick',cache:false});R.draft={title:d.title||t,when:d.when||'',allDay:!!d.allDay,type:RTYPES[d.type]?d.type:'payment',repeat:repeatLbl[d.repeat]!==undefined?d.repeat:'none',alert:alertLbl[d.alert]?d.alert:'1d',place:d.place||''};}
+  catch(e){toast('Could not understand that — try again');}
+  R.busy=false; if(settings.rem==='form'&&R.draft){Object.assign(R.form,{title:R.draft.title,when:R.draft.when.slice(0,16),type:R.draft.type,repeat:R.draft.repeat,alert:R.draft.alert});R.draft=null;} render();
+}
+function saveDraft(d){Notif.systemChecks&&setTimeout(()=>Notif.systemChecks(),0);if(settings.rem==='timeline'){const dd=new Date(d.when);const now=new Date();if(!isSameDay(dd,now))R.filter=dd-now<7*864e5?'week':(d.type==='payment'?'payments':d.type==='deadline'?'deadlines':'week');}reminders=[{id:Date.now().toString(36),done:false,...d},...reminders];saveRem();R.draft=null;R.text='';R.form={title:'',when:'',type:'payment',repeat:'none',alert:'1d'};toast('Reminder saved');render();}
+function remCardHtml(r,mode){
+  const d=new Date(r.when),now=new Date(),due=!r.done&&!isNaN(d)&&d<now&&r.type==='deadline';
+  const sub=[RTYPES[r.type],r.place,repeatLbl[r.repeat],r.alert&&r.alert!=='0'?'alert '+alertLbl[r.alert].replace(' before','')+' before':''].filter(Boolean).join(' · ');
+  return `<div class="rc ${r.done?'done':''} ${R.focus===r.id?'now':''}" data-rid="${r.id}"><div class="rt">${esc(r.title)}</div><div class="rs ${due?'due':''}">${esc((mode==='list'?whenLabel(r)+' · ':'')+sub)}</div><div class="ra"><button data-act="rem-done" data-id="${r.id}">${r.done?'Undo':'Done'}</button><button data-act="rem-ics" data-id="${r.id}">Add to calendar</button><button data-act="rem-edit2" data-id="${r.id}">Edit</button>${r.done?'':`<button data-act="rem-snooze" data-id="${r.id}">Snooze 1h</button>`}<button data-act="rem-del" data-id="${r.id}">Delete</button></div></div>`;
+}
+function inputLine(id,ph){return `<div class="field"><input id="${id}" value="${esc(R.text)}" placeholder="${ph}" enterkeyhint="send" autocomplete="off"><button class="rb mic" data-act="mic-rem" aria-label="Speak">${ico.mic}</button><button class="rb go" data-act="rem-parse" aria-label="Add">${ico.up}</button></div>`;}
+function draftHtml(){if(R.busy)return `<div class="status" style="margin-top:14px"><span class="spin"></span><span>Working out the date…</span></div>`;const d=R.draft;if(!d)return '';return `<div class="understood"><div class="lbl">Understood</div><div class="ttl">${esc(d.title)}</div><div class="chips"><span>${esc(whenLabel(d))}</span> <span>${RTYPES[d.type]}</span>${d.repeat!=='none'?` <span>${repeatLbl[d.repeat]}</span>`:''}${d.alert!=='0'?` <span>${alertLbl[d.alert]}</span>`:''}${d.place?` <span>${esc(d.place)}</span>`:''}</div><div class="ra"><button class="primary" data-act="rem-save">Save</button><button class="alt" data-act="rem-edit">Change</button></div></div>`;}
+function renderReminder(){
+  const now=new Date(), sorted=[...reminders].sort((a,b)=>new Date(a.when)-new Date(b.when));
+  const L=settings.rem;
+  if(L==='form'){
+    const f=R.form;
+    app.innerHTML=`<section class="step" style="margin-top:8px"><h2>What?</h2><div class="field"><input id="rtitle" data-rf="title" value="${esc(f.title)}" placeholder="e.g. pay DEWA bill" autocomplete="off"><button class="rb mic" data-act="mic-remform" aria-label="Speak">${ico.mic}</button></div><div class="hint">Say the whole thing and the form fills itself</div></section>
+    <section class="step"><h2>When?</h2><div class="chips">${[['today18',`Today 18:00`],['tom9','Tomorrow 9:00'],['sat10','Saturday 10:00']].map(([k,l])=>`<button class="chip" data-act="rem-when" data-k="${k}">${l}</button>`).join('')}</div><div class="detail" style="margin-top:10px"><input class="txt" type="datetime-local" data-rf="when" value="${esc(f.when)}"></div></section>
+    <section class="step"><h2>Type</h2><div class="types">${Object.keys(RTYPES).map(k=>`<button class="${f.type===k?'on':''}" data-act="rem-type" data-k="${k}">${RTICO[k]}${RTYPES[k]}</button>`).join('')}</div></section>
+    <div class="rlist" style="margin-top:20px"><div class="row"><span style="flex:1">Repeat</span><select data-rf="repeat">${Object.entries({none:'Never',daily:'Daily',weekly:'Weekly',monthly:'Monthly',yearly:'Yearly'}).map(([k,l])=>`<option value="${k}" ${f.repeat===k?'selected':''}>${l}</option>`).join('')}</select></div><div class="row"><span style="flex:1">Alert before</span><select data-rf="alert">${Object.entries(alertLbl).map(([k,l])=>`<option value="${k}" ${f.alert===k?'selected':''}>${l}</option>`).join('')}</select></div></div>
+    <div class="bottom"><button class="primary" data-act="rem-form-save">Save reminder</button></div>
+    ${sorted.length?`<div class="sec-lbl">Saved</div>${sorted.map(r=>remCardHtml(r,'list')).join('')}`:''}`;
+    return;
+  }
+  if(L==='sayit'){
+    const today=sorted.filter(r=>!r.done&&isSameDay(new Date(r.when),now)), next=sorted.filter(r=>!r.done&&new Date(r.when)>now&&!isSameDay(new Date(r.when),now));
+    app.innerHTML=`<section class="step" style="margin-top:8px"><h2>Remind me to…</h2>${inputLine('rtext','pay DEWA on Friday at 9')}<div class="hint">Say the day and time in one sentence. I fill in the rest.</div></section>${draftHtml()}
+    ${today.length?`<div class="sec-lbl">Today</div>${today.map(r=>remCardHtml(r,'list')).join('')}`:''}${next.length?`<div class="sec-lbl">Next</div>${next.slice(0,6).map(r=>remCardHtml(r,'list')).join('')}`:''}
+    ${!reminders.length?`<p class="sub" style="margin-top:24px;text-align:center">No reminders yet.</p>`:''}`;
+    return;
+  }
+  // timeline (default)
+  const F=R.filter, week=new Date(now.getTime()+7*864e5);
+  let list=sorted.filter(r=>{const d=new Date(r.when);if(F==='today')return isSameDay(d,now)||(!r.done&&d<now);if(F==='week')return d>=new Date(now.toDateString())&&d<=week;if(F==='payments')return r.type==='payment';return r.type==='deadline';});
+  const cnt=[sorted.filter(r=>!r.done&&isSameDay(new Date(r.when),now)).length,sorted.filter(r=>!r.done&&new Date(r.when)>now&&new Date(r.when)<=week).length];
+  const nextUp=list.find(r=>!r.done&&new Date(r.when)>=now);
+  app.innerHTML=`<div class="rhead"><b>${fmtDay(now)}</b><span>${cnt[0]} today · ${cnt[1]} this week</span></div>
+  <div class="filters">${[['today','Today'],['week','Week'],['payments','Payments'],['deadlines','Deadlines']].map(([k,l])=>`<button class="${F===k?'on':''}" data-act="rem-filter" data-k="${k}">${l}</button>`).join('')}</div>
+  ${sorted.length?`<div style="text-align:right;margin:-2px 0 8px"><button class="link" data-act="rem-ics-all">Export all to calendar (.ics)</button></div>`:''}${Caps.note('reminder.google_calendar')?`<div class="cap">${esc(Caps.note('reminder.google_calendar'))}</div>`:''}
+  ${list.length?`<div class="tl">${list.map((r,i)=>{const d=new Date(r.when);const isNow=nextUp&&nextUp.id===r.id;const due=!r.done&&d<now;const t=r.allDay?(isSameDay(d,now)?'Today':fmtDay(d).split(' ')[0]):(isSameDay(d,now)?fmtTime(d):fmtDay(d).replace(/ \w+$/,''));return `<div class="t ${isNow?'now':''} ${due?'due':''}">${esc(t)}</div><div class="ln"><i class="${isNow?'now':''} ${due?'due':''}"></i>${i<list.length-1?'<s></s>':''}</div>${remCardHtml(r,'tl').replace('class="rc ',`class="rc ${isNow?'now':''} `)}`;}).join('')}</div>`:`<p class="sub" style="margin-top:30px;text-align:center">Nothing here yet. Say what to remember below.</p>`}
+  ${draftHtml()}
+  <div class="rbar">${inputLine('rtext','Remind me to…')}</div>`;
+}
+document.addEventListener('ah:act',e=>{const b=document.createElement('button');b.dataset.act=e.detail;app.appendChild(b);b.click();b.remove();});
+app.addEventListener('focusin',e=>{if(e.target.matches('input,select'))setTimeout(()=>{try{e.target.scrollIntoView({block:'center',behavior:'smooth'});}catch(x){}},250);});
+app.addEventListener('change',e=>{const f=e.target.dataset.rf;if(f)R.form[f]=e.target.value;});
+// Routing contract (reAI/JARVIS will own this later): input text -> {helper, need, answer}
+function masterContext(){
+  const now=new Date(), today=reminders.filter(r=>!r.done&&isSameDay(new Date(r.when),now)).map(r=>`${r.title} (${r.allDay?'all day':fmtTime(new Date(r.when))})`);
+  const next=reminders.filter(r=>!r.done&&new Date(r.when)>now).sort((a,b)=>new Date(a.when)-new Date(b.when)).slice(0,3).map(r=>`${r.title} ${whenLabel(r)}`);
+  const conn=svcAll().filter(x=>settings.conn[x.id]==='connected').map(x=>x.name);
+  const pts=cashPrograms().filter(p=>cash.pts[p.id]).map(p=>`${p.name} ${cash.pts[p.id]}`);
+  return {city:load('aisaver.city')||'Dubai',time:now.toString(),today,next,saved:saved.slice(0,5).map(x=>x.need),connected:conn,points:pts};
+}
+// INFORMATION fast path — answered locally, no engine call. (Information | Plan | Action: only information takes the fast path.)
+function fastPath(q){
+  const t=q.toLowerCase(); const cx=masterContext();
+  if(/\b(reminder|remind|promemoria|scadenz|appuntament|what.*(today|tomorrow)|cosa ho (oggi|domani))/.test(t)&&/\b(what|which|list|show|quali|cosa|ho|have|do i)\b/.test(t)&&!/remind me|ricordami/.test(t)){
+    const tom=/tomorrow|domani/.test(t); const list=tom?reminders.filter(r=>!r.done&&isSameDay(new Date(r.when),new Date(Date.now()+864e5))).map(r=>`${r.title} (${r.allDay?'all day':fmtTime(new Date(r.when))})`):cx.today;
+    return {kind:'information',answer:list.length?`${tom?'Tomorrow':'Today'}: ${list.join(' · ')}.`:`Nothing ${tom?'tomorrow':'today'}.`+(cx.next.length?` Next: ${cx.next[0]}.`:''),open:{helper:'reminder',label:'Open AI Reminder'}};
+  }
+  if(/\b(what needs my attention|attention|cosa devo fare|cosa richiede|priorit)\b/.test(t))return {kind:'information',answer:Attention.summary()};
+  if(/\b(which services are available|what can you do|cosa puoi fare|quali servizi)\b/.test(t))return {kind:'information',answer:'Right now: '+Caps.summary()+'.'};
+  if(/\b(overdue|late|scadut|in ritardo)\b/.test(t)&&/\b(what|which|show|list|quali|cosa|any|have|ho)\b/.test(t)){const ov=reminders.filter(r=>!r.done&&new Date(r.when)<new Date());return {kind:'information',answer:ov.length?`Overdue: ${ov.map(r=>r.title).join(' · ')}.`:'Nothing overdue.',open:{helper:'reminder',label:'Open AI Reminder'}};}
+  if(/\b(alert|avvis)/.test(t)&&/\b(what|which|show|list|quali|cosa|active|triggered|have|ho|any|ci sono)\b/.test(t)){const ac=alerts.filter(a=>a.status!=='disabled');const tr=alerts.filter(a=>a.triggeredAt);return {kind:'information',answer:ac.length?`Active alerts: ${ac.map(a=>a.need).join(', ')}.${tr.length?` Met: ${tr.map(a=>a.need).join(', ')}.`:' None met yet.'}`:'No price alerts.',open:{helper:'saver',label:'Open AI Saver'}};}
+  if(/\b(notification|unread|notific)/.test(t)&&/\b(what|which|show|list|quali|cosa|any|have|ho)\b/.test(t)){const u=Notif.list.filter(n=>!n.read);return {kind:'information',answer:u.length?`${u.length} unread: ${u.slice(0,3).map(n=>n.title).join(' · ')}.`:'No unread notifications.'};}
+  if(/\b(where (am i|are we)|which helper|what are we doing|dove siamo|cosa stiamo facendo)\b/.test(t)){const H=HELPERS.find(x=>x.id===Conv.st.helper);return {kind:'information',answer:H?`We're in ${H.name}${Conv.st.request?` on "${Conv.st.request}"`:''}.`:'We are on the home screen.',open:H?{helper:H.id,label:'Back to '+H.name}:null};}
+  if(/\bsav(e|ed|ing)\b|\bsalvat/.test(t)&&/\b(what|which|show|list|quali|cosa|did i)\b/.test(t)) return {kind:'information',answer:cx.saved.length?`Saved searches: ${cx.saved.join(', ')}.`:'No saved searches yet.',open:{helper:'saver',label:'Open AI Saver'}};
+  if(/\b(connected|connection|collegat)/.test(t)&&/\b(what|which|show|list|quali|cosa)\b/.test(t)) return {kind:'information',answer:cx.connected.length?`Connected: ${cx.connected.join(', ')}.`:'No services connected yet. Open the menu → Connections to add some.'};
+  if(/\b(points|miles|punti|miglia|balance|cashback|cash back)/.test(t)&&/\b(what|how many|how much|show|quant[oi]|cosa|ho|have)\b/.test(t)) return {kind:'information',answer:cx.points.length?`Balances: ${cx.points.join(', ')}.`:'No balances entered yet.',open:{helper:'cashback',label:'Open AI Cash Back'}};
+  return null;
+}
+// Handoff context: what every helper receives with the original request (location only if the user set/authorized it)
+function handoffContext(){const cx=masterContext();return {request:HANDOFF.text,city:Conv.st.entities.location||cx.city,time:cx.time,connected:cx.connected,entities:{...Conv.st.entities},pending:Conv.st.pending,lastResult:Conv.context().lastResult,prefs:{layout:settings.layout}};}
+function routeRequest(q){const list=HELPERS.filter(h=>!h.slot).map(h=>`${h.id}: ${h.name} — ${h.desc}`).join('\n');const cx=masterContext();
+  return sample.json(`You are the master helper of the AI HELPER app. The user wrote: "${q}".
+Context you may use (do not mention it unless useful): city ${cx.city}; now ${cx.time}; reminders today: ${cx.today.join('; ')||'none'}; next reminders: ${cx.next.join('; ')||'none'}; saved searches: ${cx.saved.join(', ')||'none'}; connected services: ${cx.connected.join(', ')||'none'}; loyalty balances: ${cx.points.join(', ')||'none'}.
+Capabilities right now (never claim what is 'no'): ${Caps.summary()}.
+Clarification policy: ask a question ONLY if the missing value is not already known from the context or conversation state, cannot be safely assumed, and materially changes the result; otherwise proceed with neutral defaults and let the specialist expose refinements. Never ask for several values at once.
+Decide ONE of: A) answer directly ("general" + answer) when the context already contains the answer (e.g. "what do I have today?") or the question is simple; B) route to a specialist helper; C) ask the single minimum missing question; D) when the user asks about their own data (reminders, saved searches, points) answer from the context above instead of routing.
+Available specialist helpers:\n${list}\ngeneral: no specialist fits or the answer is already in the context.
+Decide which helper fits best. Buying or price questions -> saver. Reminders, alarms, deadlines, appointments -> reminder. Restaurants, bars, clubs, taxis, contacts -> concierge. Flights, hotels, trips, visas -> travel. Points, miles, cashback, memberships -> cashback. Devices/apps problems -> tech. Contracts, rights, fines -> legal. Movies/series -> movie. Sport questions -> sport.
+If "saver", extract the item to buy as "need". If the request is genuinely ambiguous between two helpers or lacks the one detail needed to act, set "question" to ONE short question and leave "helper" as your best guess; otherwise "question" is empty. For "general": write a useful concise answer (max 120 words, plain text). Proceed whenever enough information exists.
+Conversation state: ${Conv.summary()||'none'}.
+Also classify the request: "kind" = information (just wants to know) | plan (wants options/advice) | action (wants something done, e.g. book, order, set a reminder). Handle short commands, incomplete sentences and corrections ("no, for four people") by reading them against the previous request: ${M.lastQ&&M.lastQ!==q?`previous request: "${M.lastQ}"`:'none'}. If the message is a correction or follow-up, merge it with the previous request before deciding.
+Reply with ONLY JSON: {"helper":"saver|reminder|concierge|travel|cashback|tech|legal|movie|sport|general","confidence":0.0,"kind":"information|plan|action","need":"","question":"","answer":""}`,{modelTier:'quick',cache:false});}
+const HANDOFF={text:'',from:'home'};
+// ===== Trip parser for AI TRAVEL (EN/IT). Produces {kind:flight|hotel|both, from, to, out, back, nights, adults, prefs:{direct,baggage}} with nulls for unknowns. Never guesses a city.
+const CITY_IATA={dubai:'DXB','abu dhabi':'AUH',madrid:'MAD',rome:'FCO',roma:'FCO',milan:'MXP',milano:'MXP',london:'LHR',londra:'LHR',paris:'CDG',parigi:'CDG','la palma':'SPC',barcelona:'BCN',barcellona:'BCN',lisbon:'LIS',lisbona:'LIS','new york':'JFK',istanbul:'IST',cairo:'CAI',doha:'DOH',riyadh:'RUH',mumbai:'BOM',delhi:'DEL',bangkok:'BKK',singapore:'SIN',tokyo:'HND',amsterdam:'AMS',frankfurt:'FRA',zurich:'ZRH',zurigo:'ZRH',vienna:'VIE',athens:'ATH',atene:'ATH',naples:'NAP',napoli:'NAP',venice:'VCE',venezia:'VCE',bologna:'BLQ',turin:'TRN',torino:'TRN',florence:'FLR',firenze:'FLR',tenerife:'TFS','gran canaria':'LPA',malaga:'AGP',nice:'NCE',nizza:'NCE',munich:'MUC',monaco:'MUC',berlin:'BER',berlino:'BER',manchester:'MAN',dublin:'DUB',dublino:'DUB',cyprus:'LCA',larnaca:'LCA',beirut:'BEY',amman:'AMM',muscat:'MCT',jeddah:'JED',bahrain:'BAH',kuwait:'KWI',male:'MLE',maldives:'MLE',colombo:'CMB',zanzibar:'ZNZ',nairobi:'NBO','cape town':'CPT',johannesburg:'JNB',bali:'DPS',phuket:'HKT','kuala lumpur':'KUL','hong kong':'HKG',seoul:'ICN',sydney:'SYD',melbourne:'MEL',toronto:'YYZ','los angeles':'LAX',miami:'MIA',chicago:'ORD',boston:'BOS'};
+const pad2=n=>String(n).padStart(2,'0'); const isoDate=d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+function parseTrip(text,prev){
+  const t=(text||'').toLowerCase().replace(/[.!?]+$/,''); const T=Object.assign({kind:null,from:null,to:null,out:null,back:null,nights:null,adults:null,prefs:{direct:false,baggage:false}},prev?JSON.parse(JSON.stringify(prev)):{});
+  const cityRe=Object.keys(CITY_IATA).sort((a,b)=>b.length-a.length).join('|');
+  let m;
+  const hasH=/\b(hotel|albergo|stay|soggiorn|room|camera)\b/.test(t), hasF=/\b(flight|flights|volo|voli|fly|volare)\b/.test(t);
+  if(hasH&&hasF)T.kind='both'; else if(hasH)T.kind='hotel'; else if(hasF)T.kind='flight';
+  if((m=t.match(new RegExp(`\\b(?:from|da|dal|dalla)\\s+(${cityRe})\\b`))))T.from=m[1];
+  if((m=t.match(new RegExp(`\\b(?:to|a|per|verso|in)\\s+(${cityRe})\\b`))))T.to=m[1];
+  if(!T.to&&!T.from&&(m=t.match(new RegExp(`\\b(${cityRe})\\b`))))T.to=m[1];
+  if(T.to&&T.from&&T.to===T.from)T.to=null;
+  const now=new Date(); const days=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'],itd=['domenica','lunedì','martedì','mercoledì','giovedì','venerdì','sabato'];
+  if(/\btomorrow\b|\bdomani\b/.test(t)){const d=new Date(now);d.setDate(d.getDate()+1);T.out=isoDate(d);}
+  else if(/\btoday\b|\boggi\b/.test(t))T.out=isoDate(now);
+  else if((m=t.match(new RegExp(`\\b(?:next |prossim[oa] )?(${[...days,...itd].join('|')})(?![a-z])`)))){const w=days.indexOf(m[1])>=0?days.indexOf(m[1]):itd.indexOf(m[1]);const d=new Date(now);d.setDate(d.getDate()+((w-d.getDay()+7)%7||7));T.out=isoDate(d);}
+  else if(/\bnext week\b|\bsettimana prossima\b|\bprossima settimana\b/.test(t)){const d=new Date(now);d.setDate(d.getDate()+7);T.out=isoDate(d);}
+  else if((m=t.match(/\b(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\b/))){const y=m[3]?(m[3].length===2?2000+ +m[3]:+m[3]):now.getFullYear();const d=new Date(y,+m[2]-1,+m[1]);if(!isNaN(d)&&+m[2]<=12&&+m[1]<=31)T.out=isoDate(d);}
+  else if((m=t.match(/\b(\d{1,2})\s*(?:-|–|to|al)\s*(\d{1,2})\s+(january|february|march|april|may|june|july|august|september|october|november|december|gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\b/))){const mo=['january','february','march','april','may','june','july','august','september','october','november','december'].indexOf(m[3]);const mi=['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'].indexOf(m[3]);const mm=mo>=0?mo:mi;const y=now.getFullYear()+((mm<now.getMonth())?1:0);T.out=isoDate(new Date(y,mm,+m[1]));T.back=isoDate(new Date(y,mm,+m[2]));}
+  if((m=t.match(/\b(?:for|per)\s+(\d+|one|two|three|four|five|una|due|tre|quattro|cinque)\s+(nights?|notti|notte)\b/))){T.nights=NUMW[m[1]]||{one:1,una:1}[m[1]]||parseInt(m[1],10);if(T.out&&T.nights){const d=new Date(T.out);d.setDate(d.getDate()+T.nights);T.back=isoDate(d);}}
+  if((m=t.match(/\b(\d+|one|two|three|four|five|un|una|due|tre|quattro|cinque)\s+(?:passengers?|people|persons?|adults?|persone|passeggeri|adulti)\b/))||(m=t.match(/\b(?:for|per)\s+(\d+|two|three|four|five|due|tre|quattro|cinque)\b(?!\s*(?:nights?|notti|notte))/)))T.adults=NUMW[m[1]]||{one:1,un:1,una:1}[m[1]]||parseInt(m[1],10);
+  if(/\bdirect\b|\bdirett\w|\bnon-?stop\b/.test(t))T.prefs.direct=true;
+  if(/\b(checked )?baggage\b|\bbagagli\w|\bluggage\b|\bvaligi\w/.test(t))T.prefs.baggage=true;
+  if(/\bone passenger\b|\bsolo io\b|\bda solo\b|\balone\b/.test(t))T.adults=1;
+  if(!T.kind&&t.trim())T.kind=/night|notte/.test(t)?'hotel':'flight';
+  return T;
+}
+const cityName=c=>c?c.replace(/\b\w/g,x=>x.toUpperCase()):'';
+function tripLinks(T){ // deep links to searches with the trip prefilled: open the provider, never a booking, never a fare
+  const L=[]; const f=CITY_IATA[T.from]||'',to=CITY_IATA[T.to]||'';
+  if((T.kind||'flight')!=='hotel'&&T.to){L.push({l:'Google Flights',u:`https://www.google.com/travel/flights?q=${encodeURIComponent(`flights from ${cityName(T.from||'Dubai')} to ${cityName(T.to)}${T.out?' on '+T.out:''}${T.back?' returning '+T.back:''}`)}`,t:'Search · opens provider'});
+    if(f&&to)L.push({l:'Kiwi.com',u:`https://www.kiwi.com/en/search/results/${f}/${to}/${T.out||'anytime'}/${T.back||'no-return'}`,t:'Search · opens provider'});
+    L.push({l:'Skyscanner',u:`https://www.skyscanner.net/transport/flights/${(f||'dxb').toLowerCase()}/${(to||'').toLowerCase()}/${T.out?T.out.replace(/-/g,'').slice(2):''}${T.back?'/'+T.back.replace(/-/g,'').slice(2):''}/`,t:'Search · opens provider'});}
+  if((T.kind||'flight')!=='flight'&&T.to){L.push({l:'Booking.com',u:`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(cityName(T.to))}${T.out?'&checkin='+T.out:''}${T.back?'&checkout='+T.back:''}${T.adults?'&group_adults='+T.adults:''}`,t:'Search · opens provider'});L.push({l:'Agoda',u:`https://www.agoda.com/search?city=${encodeURIComponent(cityName(T.to))}${T.out?'&checkIn='+T.out:''}`,t:'Search · opens provider'});}
+  return L;
+}
+function tripMissing(T){const miss=[];if(!T.to)miss.push('destination');if((T.kind||'flight')!=='hotel'&&!T.from)miss.push('origin');if(!T.out)miss.push('date');return miss;}
+function tripQuestion(T){const m=tripMissing(T);if(!m.length)return '';if(m.includes('destination'))return 'Where do you want to go?';if(m.includes('date'))return `When do you want to ${T.kind==='hotel'?'check in':'leave'}?`;if(m.includes('origin'))return 'Leaving from where?';return '';}
+// ===== Conversation state (lightweight, structured). The master and every helper read/write it; future Foundation/reAI can govern it through the same shape.
+const Conv={
+  st:{helper:null,prevHelper:null,request:'',refined:'',kind:null,entities:{item:null,people:null,date:null,time:null,budget:null,location:null},pending:null,pendingAction:null,recentAction:null,selected:null,lastResult:null,history:[]},
+  set(patch){Object.assign(this.st,patch);},
+  entity(k,v){if(v!=null&&v!=='')this.st.entities[k]=v;},
+  // lastResult: {helper, options:[{title,price,when,url,raw}], query}
+  result(helper,options,query){const regs=(options||[]).slice(0,10).map(o=>Results.register(helper,o,query||this.st.request));this.st.lastResult={helper,options:regs,query:query||this.st.request};this.st.selected=null;this.st.recentAction=null;this.st.history=[...this.st.history.slice(-9),{helper,query:query||this.st.request,ts:Date.now()}];return regs;},
+  select(r){this.st.selected=r?r.id:null;if(r)this.entity('item',r.title);},
+  context(){return {...this.st,entities:{...this.st.entities},lastResult:this.st.lastResult?{helper:this.st.lastResult.helper,query:this.st.lastResult.query,options:this.st.lastResult.options.map(o=>`${o.id}: ${o.title}`)}:null,selected:this.st.selected};},
+  summary(){const e=this.st.entities;const parts=[];if(this.st.lastResult)parts.push(`last result from ${this.st.lastResult.helper} for "${this.st.lastResult.query}": ${this.st.lastResult.options.map((o,i)=>`${i+1}) ${o.title}${o.price?' '+o.price:''}`).join('; ')}`);if(this.st.selected){const sel=Results.get(this.st.selected);if(sel)parts.push(`selected: ${sel.title}`);}const ents=Object.entries(e).filter(([k,v])=>v).map(([k,v])=>`${k}=${v}`).join(', ');if(ents)parts.push('known: '+ents);if(this.st.pending)parts.push('pending question: '+this.st.pending);return parts.join('. ');}
+};
+// ===== Result → Action model (internal product contract). Every result gets a stable local id (r1, r2, …) for later turns; actions depend on the result type.
+const Results={seq:0,byId:new Map(),
+  register(helper,option,query){const id='r'+(++this.seq);const r={id,helper,query,...option};r.actions=this.actionsFor(r);this.byId.set(id,r);if(this.byId.size>60){const k=this.byId.keys().next().value;this.byId.delete(k);}return r;},
+  get(id){return this.byId.get(id)||null;},
+  actionsFor(r){const a=[];const add=(type,label,url)=>a.push({type,label,url:url||null});
+    if(r.helper==='saver'){add('COMPARE','Compare');add('SAVE','Save');add('ALERT','Alert');if(r.url)add('BUY_LINK','Open merchant',r.url);add('REFINE','Refine');}
+    else if(r.helper==='concierge'){const cat=r.kind||'venue';add('MAP','Map',`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.title+' Dubai')}`);if(r.phone)add('CALL','Call',`tel:${r.phone}`);if(r.url)add('WEBSITE','Website',r.url);if(cat==='restaurant'||cat==='cafe')add('BOOKING_LINK','Reserve (deep link)');if(cat!=='service')add('REMIND','Remind');add('SAVE','Save');}
+    else if(r.helper==='travel'){add('OPEN','Inspect');add('COMPARE','Compare');if(r.url)add('BOOKING_LINK','Provider booking path',r.url);add('REMIND','Remind');add('SAVE','Save');}
+    else if(r.helper==='movie'){add('SAVE','Save');add('DEEP_LINK','Where to watch');}
+    else if(r.helper==='sport'){add('OPEN','Details');add('REMIND','Remind');}
+    else if(r.helper==='tech'){add('OPEN','Continue troubleshooting');add('RETRY','Retry');}
+    else if(r.helper==='legal'){add('OPEN','Next action');if(r.url)add('WEBSITE','Authority',r.url);}
+    else {add('OPEN','Open');add('SAVE','Save');}
+    return a;}
+};
+const ORD={first:1,second:2,third:3,fourth:4,fifth:5,'1st':1,'2nd':2,'3rd':3,prima:1,primo:1,seconda:2,secondo:2,terza:3,terzo:3,quarta:4,quarto:4,one:1,two:2,three:3};
+// Reference resolver: returns {action, ...} for utterances that refer to existing state, or null to let the master decide.
+const NUMW={two:2,three:3,four:4,five:5,six:6,due:2,tre:3,quattro:4,cinque:5,sei:6};
+const amountOf=p=>{const m=String(p||'').replace(/,/g,'').match(/[\d.]+/);return m?parseFloat(m[0]):Infinity;};
+function resolveReference(q){
+  const t=q.toLowerCase().trim().replace(/[.!?]+$/,''); const R=Conv.st.lastResult; const opts=R?R.options:[]; const sel=Conv.st.selected?Results.get(Conv.st.selected):null;
+  const byOrd=n=>opts[n-1]||null; const cheapest=()=>opts.slice().sort((a,b)=>amountOf(a.price)-amountOf(b.price))[0]||null;
+  let m;
+  if(/\b(why is the (first|second) better|why (the )?first|perch[eé] il primo|perch[eé] (è|e') migliore)\b/.test(t)&&opts.length>=1)return {action:'why',options:opts.slice(0,2)};
+  if(/\b(why (this|that) one|why (this|that)|perch[eé] (questo|quello))\b/.test(t)&&opts.length>=1){const o=sel||opts[0];const other=opts.find(x=>x!==o)||opts[1];return {action:'why',options:[o,other].filter(Boolean)};}
+  if(/\b(which (one )?is (closer|nearer|closest)|quale (è|e') pi[uù] vicin\w)\b/.test(t)&&opts.length)return {action:'compare',options:opts,dim:'closer'};
+  if(/\b(which (one )?is better for (a )?(child|kid|children)|quale (è|e') meglio per (un )?bambin\w)\b/.test(t)&&opts.length)return {action:'compare',options:opts,dim:'child'};
+  // "compare the first two" / "confronta i primi due"
+  if(/\b(compare|confronta)\b/.test(t)&&opts.length>=2){const n=(m=t.match(/(\d+|two|three|four|due|tre|quattro)/))?(NUMW[m[1]]||parseInt(m[1],10)):2;return {action:'compare',options:opts.slice(0,Math.min(n,opts.length))};}
+  if(/\b(remind me (then|about|tomorrow about|of)|ricordamelo|ricordami (quello|questo|del|della|il|la))\b/.test(t)&&R){const o=(m=t.match(/\b(first|second|third|primo|secondo|terzo)\b/))?byOrd(ORD[m[1]]):(sel||byOrd(1));return {action:'remind',option:o,when:/tomorrow|domani/.test(t)?'tomorrow':''};}
+  // ordinal: "the second one", "il secondo", "show me the first one again", "fammi rivedere il primo"
+  if((m=t.match(/\b(first|second|third|fourth|fifth|1st|2nd|3rd|primo|prima|secondo|seconda|terzo|terza|quarto|quarta)\b/))&&opts.length){const o=byOrd(ORD[m[1]]);if(o){if(/again|rivedere|di nuovo|show|fammi vedere|mostra/.test(t))return {action:'show',option:o};return {action:'select',option:o,index:ORD[m[1]]};}}
+  // superlative: "the cheaper one", "quello più economico", "save the cheapest one"
+  if(/\b(cheapest|cheaper|più economic\w|meno car\w)\b/.test(t)&&opts.length&&!/\b(same|stesso|stessa|uguale)\b/.test(t)){const o=cheapest();if(o){if(/save|salva/.test(t))return {action:'save',option:o};if(/open|apri|book|prenota/.test(t))return {action:'open',option:o};return {action:'select',option:o,index:opts.indexOf(o)+1};}}
+  // pronouns acting on the selected (or first) result
+  const target=sel||byOrd(1);
+  if(/^(open|apri|aprilo|aprila|open it|open that|apri quello|apri quella|book that|prenota quello|book it|prenotalo)$/.test(t)&&target)return {action:'open',option:target};
+  if(/\b(show me (that|the) (restaurant|place|hotel|one) again|fammi rivedere quel\w*)\b/.test(t)&&target)return {action:'show',option:target};
+  if((m=t.match(/\b(?:same search|stessa ricerca|same)\b.*\b(?:but|ma)\s+(cheaper|più economic\w)/))&&Conv.st.helper)return {action:'refine',modifier:'cheaper'};
+  if((m=t.match(/\b(?:do the same|fallo|do it)\b.*\b(?:for|per)\s+(\d+|two|three|four|five|due|tre|quattro|cinque)\b/))&&Conv.st.helper)return {action:'refine',entity:['people',NUMW[m[1]]||parseInt(m[1],10)]};
+  if(/^(that one|this one|quello|quella|questo|questa)$/.test(t)&&target)return {action:'select',option:target,index:opts.indexOf(target)+1};
+  if(/\b(show (me )?(that|it|the \w+) again|show (me )?again|rifammi vedere|fammi rivedere|mostra(mi)? di nuovo|show (me )?the (results?|list))\b/.test(t)&&R)return {action:'show',option:/that|it|the \w+ again/.test(t)?target:null};
+  if(/^(save (this|it|that)|save that one|salva(lo|la)?( questo| questa| quello)?)$/.test(t)&&R)return {action:'save',option:target};
+  // refinements: "same but cheaper", "same thing tomorrow", "uguale domani", "lo stesso ma per tre", "for three", "per due"
+  if((m=t.match(/\b(same|stesso|stessa|uguale|lo stesso)\b.*\b(tomorrow|domani)\b/))&&Conv.st.helper)return {action:'refine',entity:['date','tomorrow']};
+  if((m=t.match(/\b(?:same|stesso|stessa|uguale|lo stesso)\b.*?\b(?:but|ma)\s+(cheaper|closer|later|earlier|bigger|smaller|più economic\w|più vicin\w|per (\w+)|for (\w+))/))&&Conv.st.helper){const nw=m[2]||m[3];if(nw&&(NUMW[nw]||/^\d+$/.test(nw)))return {action:'refine',entity:['people',NUMW[nw]||parseInt(nw,10)]};return {action:'refine',modifier:m[1]};}
+  if((m=t.match(/\b(?:for|per|make it|do it for|but for)\s+(\d+|two|three|four|five|six|due|tre|quattro|cinque|sei)\s*(?:people|persons|persone|of us)?\b/))&&Conv.st.helper){return {action:'refine',entity:['people',NUMW[m[1]]||parseInt(m[1],10)]};}
+  if(/\b(tomorrow|domani)\s+(instead|invece)\b/.test(t)&&Conv.st.helper)return {action:'refine',entity:['date','tomorrow']};
+  if((m=t.match(/^(cheaper|più economico|closer|più vicino|later|più tardi|earlier|prima)$/))&&R)return {action:'refine',modifier:m[1]};
+  return null;
+}
+// Compare only on dimensions actually known for the results; never invent distance, hours or ratings.
+function compareText(opts,dim,why){
+  const known=o=>({price:o.price||null,area:o.area||o.sub||null,when:o.when||null,rating:o.rating||null,distance:o.distance||null,open:o.openNow});
+  const rows=opts.map(o=>{const k=known(o);return `${o.title}: ${[k.price,k.area,k.when,k.rating?'★ '+k.rating:null].filter(Boolean).join(', ')||'no sourced details'}`;});
+  if(dim==='closer'){const withD=opts.filter(o=>o.distance!=null);if(!withD.length)return `I don't have sourced distances for these, so I can't say which is closer. Open the map for each to check.`;const c=withD.slice().sort((a,b)=>a.distance-b.distance)[0];return `${c.title} is closest (${c.distance}).`;}
+  if(dim==='child'){return `I can only compare what I know (price, area, time); suitability for a child isn't sourced — the venue page or a call will tell you.`;}
+  const priced=opts.filter(o=>amountOf(o.price)<Infinity);const cheapest=priced.slice().sort((a,b)=>amountOf(a.price)-amountOf(b.price))[0];
+  if(why){const a=opts[0];const b=opts[1];const reasons=[];if(a&&b){if(amountOf(a.price)<amountOf(b.price))reasons.push('it costs less');if(a.rating&&b.rating&&a.rating>b.rating)reasons.push('it is rated higher');if(a.when&&!b.when)reasons.push('it has a known time slot');}return reasons.length?`${a.title} over ${b?b.title:'the other'}: ${reasons.join(', ')}.`:`On what I actually know, there is no sourced reason to prefer ${a?a.title:'the first'}; the order came from the assistant's suggestion, not from live data.`;}
+  return `${rows.join(' | ')}.${cheapest?` Lowest price: ${cheapest.title}.`:''}`;
+}
+function applyReference(ref,q){
+  const LR=Conv.st.lastResult; const h=LR?LR.helper:Conv.st.helper; const H=HELPERS.find(x=>x.id===h); const name=H?H.name:'Master helper';
+  const say=(txt,open)=>{M.answer=txt;M.from=name;M.color=H?H.color:'#0a84ff';M.open=open||null;M.busy=false;render();Speech.say(txt);};
+  const act=(type)=>{Conv.st.recentAction={type,resultId:ref.option&&ref.option.id,ts:Date.now()};};
+  if(ref.action==='show'){if(ref.option){Conv.select(ref.option);say(`${ref.option.title}${ref.option.price?' · '+ref.option.price:''}`,{helper:h,label:'Open '+name});}else openHelper(h,'');act('OPEN');return true;}
+  if(ref.action==='select'&&ref.option){Conv.select(ref.option);const acts=ref.option.actions.map(a=>a.label).join(' · ');say(`Option ${ref.index||''}: ${ref.option.title}${ref.option.price?' · '+ref.option.price:''}. You can: ${acts}.`,{helper:h,label:'Open details'});act('SELECT');return true;}
+  if(ref.action==='open'&&ref.option){Conv.select(ref.option);const a=ref.option.actions.find(x=>x.url)||null;act('OPEN');if(a&&a.url){window.open(a.url,'_blank','noopener');say(`Opening ${ref.option.title} (${a.label}).`);}else{say(`${ref.option.title}: no direct link yet — opening ${name}.`);openHelper(h,'');}return true;}
+  if(ref.action==='compare'){act('COMPARE');say(compareText(ref.options,ref.dim),{helper:h,label:'Open '+name});return true;}
+  if(ref.action==='why'){act('COMPARE');say(compareText(ref.options,null,true),{helper:h,label:'Open '+name});return true;}
+  if(ref.action==='save'){const o=ref.option||(LR&&LR.options[0]);if(h==='saver'&&result&&!ref.option){document.dispatchEvent(new CustomEvent('ah:act',{detail:'save-search'}));}else{saved=[{need:o?o.title:LR.query,best:o?o.title:'',price:o&&o.price||'',helper:h,ts:Date.now()},...saved].slice(0,50);save('aisaver.saved',saved);}act('SAVE');say(`Saved: ${o?o.title:LR.query}.`);return true;}
+  if(ref.action==='remind'&&ref.option){act('REMIND');openReminder();R.text=`${ref.option.title}${ref.when==='tomorrow'?' tomorrow 9:00':ref.option.when?' '+ref.option.when:' tomorrow 9:00'}`;parseReminder();return true;}
+  if(ref.action==='refine'){if(ref.entity)Conv.entity(ref.entity[0],ref.entity[1]);const base=Conv.st.request||(R&&LR.query)||'';const mod=ref.modifier?` — ${ref.modifier}`:ref.entity?` — ${ref.entity[0]==='people'?'for '+ref.entity[1]+' people':ref.entity[1]}`:'';HANDOFF.text=base+mod;Conv.set({refined:HANDOFF.text,request:HANDOFF.text});act('REFINE');openHelper(h||'saver',HANDOFF.text);return true;}
+  return false;
+} // preserves the original request across a handoff so the user can return to the master
+const Speech={say(t){try{if(!('speechSynthesis' in window)||settings.readback!=='on')return;const u=new SpeechSynthesisUtterance(t);u.lang=navigator.language||'en-US';speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}};
+// Attention model: what deserves Home/Brief attention. Items: {key, kind, priority, title, sub, obj:{type,id}, actions}. Deduplicated per underlying object; ordered by priority then time.
+const Attention={
+  items(){const now=Date.now(),tod=new Date(new Date().toDateString()),tom=new Date(tod.getTime()+864e5);const out=[];const seen=new Set();const add=i=>{if(seen.has(i.key))return;seen.add(i.key);out.push(i);};
+    reminders.filter(r=>!r.done&&new Date(r.when)<now).forEach(r=>add({key:'rem:'+r.id,kind:'overdue',priority:1,time:+new Date(r.when),title:r.title,sub:whenLabel(r)+' · overdue',obj:{type:'reminder',id:r.id},actions:['done','open']}));
+    reminders.filter(r=>!r.done&&new Date(r.when)>=now&&new Date(r.when)<tom).forEach(r=>add({key:'rem:'+r.id,kind:'today',priority:2,time:+new Date(r.when),title:r.title,sub:whenLabel(r),obj:{type:'reminder',id:r.id},actions:['done','open']}));
+    alerts.filter(a=>a.status!=='disabled'&&a.triggeredAt&&now-new Date(a.triggeredAt)<7*864e5).forEach(a=>add({key:'alert:'+(a.id||a.need),kind:'alert_met',priority:3,time:+new Date(a.triggeredAt),title:'Price alert met: '+a.need,sub:a.lastObs?`${a.lastObs.merchant} ${a.lastObs.price}`:'',obj:{type:'alert',id:a.id||a.need},actions:['view']}));
+    if(Engine.mode==='mock')add({key:'sys:mock',kind:'connection',priority:4,time:now,title:'Assistant in mock mode',sub:'No AI provider configured on the server',obj:{type:'system',id:'mock'},actions:[]});
+    Notif.list.filter(n=>!n.read&&!['reminder','alert','system'].includes(n.type)).slice(0,2).forEach(n=>add({key:'notif:'+n.id,kind:'notification',priority:5,time:n.at,title:n.title,sub:n.message,obj:{type:'notification',id:n.id},actions:[]}));
+    if(!out.some(i=>i.kind==='alert_met'))saved.slice(0,2).forEach((x,i)=>add({key:'saved:'+x.need,kind:'saved',priority:6,time:x.lastRun||x.ts||0,title:'Saved: '+x.need,sub:[x.best,x.price].filter(Boolean).join(' · '),obj:{type:'saved',id:x.need},actions:['rerun']}));
+    return out.sort((a,b)=>a.priority-b.priority||a.time-b.time);},
+  summary(){const it=this.items();if(!it.length)return 'Nothing needs your attention right now.';return it.slice(0,5).map(i=>i.title+(i.kind==='overdue'?' (overdue)':'')).join(' · ')+'.';}
+};
+function homeState(){
+  const now=new Date(), tod=new Date(now.toDateString()), tom=new Date(tod.getTime()+864e5);
+  const overdue=reminders.filter(r=>!r.done&&new Date(r.when)<now), today=reminders.filter(r=>!r.done&&new Date(r.when)>=now&&new Date(r.when)<tom).sort((a,b)=>new Date(a.when)-new Date(b.when));
+  const trig=alerts.filter(a=>a.triggeredAt&&Date.now()-new Date(a.triggeredAt)<7*864e5), activeAl=alerts.filter(a=>a.status!=='disabled');
+  const unread=Notif.list.filter(n=>!n.read);
+  const issues=[]; if(Engine.mode==='mock')issues.push({t:'Assistant in mock mode',s:'No AI provider configured on the server',dest:{helper:null}});
+  return {overdue,today,trig,activeAl,unread,recentSaved:saved.slice(0,3),issues,hour:now.getHours()};
+}
+function briefHtml(){
+  const it=Attention.items(); if(!it.length)return '';
+  const row=i=>{const ov=i.kind==='overdue';const acts=i.actions.map(a=>a==='done'?`<button class="st" data-act="rem-done-home" data-id="${esc(i.obj.id)}">Done</button>`:a==='open'?`<button class="st" data-act="go" data-h="reminder">Open</button>`:a==='view'?`<button class="st" data-act="alert-open-home" data-aid="${esc(i.obj.id)}">View</button>`:a==='rerun'?`<button class="st" data-act="saved-run-home" data-need="${esc(i.obj.id)}">Rerun</button>`:'').join('');return `<div class="row2 ${ov?'ov':''}"><div class="t">${esc(i.title)}<small>${esc(i.sub||'')}</small></div>${acts}</div>`;};
+  const groups=[['Today',['overdue','today']],['Money',['alert_met','saved']],['Connections',['connection']],['Other',['notification']]];
+  const body=groups.map(([t,kinds])=>{const rows=it.filter(i=>kinds.includes(i.kind)).slice(0,5).map(row);return rows.length?`<div class="sec2"><h4>${t}</h4>${rows.join('')}</div>`:'';}).join('');
+  const h=new Date().getHours(); const greet=h<12?'Morning brief':h<18?'Afternoon brief':'Evening brief'; const unread=Notif.unread();
+  return `<section class="brief" aria-label="${greet}"><div class="bh"><b>${greet}</b><span>${esc(fmtDay(new Date()))}${unread?` · ${unread} unread`:''}</span></div>${body}</section>`;
+}
+function renderHome(){
+  app.innerHTML=`<div class="hero"><h1>Which helper do you need?</h1>
+  <div class="field"><input id="ask" value="${esc(M.q)}" placeholder="Or just tell me what you need" enterkeyhint="send" autocomplete="off"><button class="rb mic" data-act="mic-home" aria-label="Speak">${ico.mic}</button><button class="rb go" data-act="ask" aria-label="Ask">${ico.up}</button></div>
+  <div class="hint" id="hint">Type or tap the mic — I'll pick the right helper</div></div>
+  ${briefHtml()}
+  ${M.busy?`<div class="status" style="margin-top:6px"><span class="spin"></span><span>Working out who can help…</span><button class="stop" data-act="stop-home">Stop</button></div>`:''}
+  ${M.answer?`<div class="answer"><div class="from"><i style="background:${M.color}"></i>${esc(M.from)}</div>${esc(M.answer)}${M.open?`<div style="margin-top:10px"><button class="link" data-act="helper" data-id="${M.open.helper}">${esc(M.open.label)} →</button></div>`:''}</div>`:''}
+  ${M.errCode?stateHtml('error',{code:M.errCode,retry:'ask-retry'}):''}
+  <div class="gridh">${HELPERS.map(h=>h.slot?`<button class="tileh slot" data-act="helper" data-id="${h.id}"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><b>Coming soon</b></button>`:`<button class="tileh ${h.live?'live':''}" data-act="helper" data-id="${h.id}"><span class="top"><span class="ico" style="background:${h.color}">${h.ico}</span>${h.live?'':'<span class="soon">Soon</span>'}</span><span><b>${h.name}</b><small>${h.desc}</small></span></button>`).join('')}</div>`;
+}
+function resetAll(){view='saver';prevCur=0;$('hname').textContent='AI SAVER';A={who:'',whoText:'',where:'',whereText:'',whereCity:load('aisaver.city')||'',whereAddr:'',coords:null,gpsMsg:'',need:'',online:[],nearby:[],onlineOther:'',nearbyOther:''};cur=0;reveal=1;result=null;err=null;busy=false;mode='flow';render();window.scrollTo(0,0);}
+const ok={who:()=>!!A.who,where:()=>A.where==='gps'?!!A.coords:!!(A.where&&A.whereCity.trim()),what:()=>!!A.need.trim(),online:()=>true,nearby:()=>true};
+const allOk=()=>ok.what();
+const ico={
+  me:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+  other:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9" r="3"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M15 15.5a5 5 0 0 1 7 4.5"/></svg>',
+  work:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  gps:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
+  city:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  else:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-8-8 18-2-8z"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>',
+  up:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M6 11l6-6 6 6"/></svg>'
+};
+const choice=(grp,v,b,s,on)=>`<button class="choice ${on?'on':''}" data-act="pick" data-g="${grp}" data-v="${v}"><span class="ic">${ico[v]}</span><span class="t"><b>${b}</b><span>${s}</span></span><span class="chk"></span></button>`;
+const TITLES={who:'Who is it for?',where:'Where do you need it?',what:'What do you need?',online:'Online stores you usually use',nearby:'Stores nearby you usually visit'};
+const SUBS={who:'This changes what counts as the best option.',where:'Used to find stores nearby and delivery options.',what:'Type it or say it.',online:'Optional. Used to compare prices.',nearby:'Optional. Supermarkets, malls, electronics.'};
+
+function stepBody(k,tiles){
+  if(k==='who') return `<div class="choices">${choice('who','me','For me','Everyday use',A.who==='me')}${choice('who','other','For someone else','A gift, family, a friend',A.who==='other')}${choice('who','work','For work','Office or company purchase',A.who==='work')}</div>
+    ${A.who&&A.who!=='me'?`<div class="detail"><input class="txt" data-f="whoText" value="${esc(A.whoText)}" placeholder="Who? e.g. my mother, 65 — or a team of 5"></div>`:''}`;
+  if(k==='where') return `<div class="choices">${choice('where','gps','Use my location','Connect GPS on this device',A.where==='gps')}${choice('where','city',"I'll type where I am",'City or area',A.where==='city')}${choice('where','else','I need it somewhere else','Another city or address',A.where==='else')}</div>
+    ${A.where==='gps'?`<div class="gps">${esc(A.gpsMsg||'Finding your location…')}</div>`:''}
+    ${A.where&&A.where!=='gps'?`<div class="detail" style="display:flex;flex-direction:column;gap:8px"><input class="txt" data-f="whereCity" value="${esc(A.whereCity)}" placeholder="City, e.g. Dubai"><input class="txt" data-f="whereAddr" value="${esc(A.whereAddr)}" placeholder="${A.where==='else'?'Area or address where it is needed, e.g. JLT, Cluster D':'Area or address, e.g. Five JVC'}"></div>`:''}`;
+  if(k==='what') return `<div class="field"><input id="need" data-f="need" value="${esc(A.need)}" placeholder="e.g. cordless vacuum cleaner" enterkeyhint="next" autocomplete="off"><button class="rb mic" data-act="mic" aria-label="Speak">${ico.mic}</button>${mode==='flow'?`<button class="rb go" data-act="reveal" aria-label="Continue" ${A.need.trim()?'':'disabled'}>${ico.up}</button>`:''}</div><div class="hint" id="hint">Type or tap the mic</div>`;
+  const list=k==='online'?ONLINE:NEARBY, sel=A[k], other=A[k+'Other'];
+  const cls=tiles?'tile':'chip';
+  return `<div class="${tiles?'grid2':'chips'}">${list.map(s=>`<button class="${cls} ${sel.includes(s)?'on':''}" data-act="chip" data-k="${k}" data-v="${esc(s)}">${tiles?`<span class="chk"></span>`:''}${esc(s)}</button>`).join('')}<button class="${cls} add" data-act="other" data-k="${k}">${tiles?'<span class="chk"></span>':''}+ Other</button></div>
+    ${other!==null&&other!==undefined&&A[k+'OtherOpen']?`<div class="detail"><input class="txt" data-f="${k}Other" value="${esc(other)}" placeholder="Store name"></div>`:''}`;
+}
+const stepHtml=(k,tiles)=>`<section class="step" data-step="${k}"><h2>${TITLES[k]}</h2><p class="sub">${SUBS[k]}</p>${stepBody(k,tiles)}</section>`;
+
+function summaryValue(k){
+  if(k==='who') return A.who?({me:'Me',other:'Someone else'+(A.whoText?` — ${A.whoText}`:''),work:'Work'+(A.whoText?` — ${A.whoText}`:'')}[A.who]):'';
+  if(k==='where') return A.where==='gps'?(A.coords?'My location':''):[A.whereAddr.trim(),A.whereCity.trim()].filter(Boolean).join(', ');
+  if(k==='what') return A.need.trim();
+  const l=[...A[k],...(A[k+'Other'].trim()?[A[k+'Other'].trim()]:[])]; return l.join(', ');
+}
+
+// ---------- layouts
+function render(){
+  if(view==='home') return renderHome();
+  if(view==='reminder') return renderReminder();
+  if(view==='concierge') return renderConcierge();
+  if(view==='cashback') return renderCash();
+  if(view==='spec') return renderSpec();
+  if(busy) return renderBusy();
+  if(result||err) return renderResult();
+  const L=settings.layout;
+  let html='';
+  if(L==='flow'){
+    html=STEPS.slice(0,reveal).map(k=>stepHtml(k)).join('');
+    html+=`<div class="bottom">${reveal>=STEPS.length?`<button class="primary" data-act="find" ${allOk()?'':'disabled'}>Find the best option</button>`:''}</div>`;
+  } else if(L==='steps'){
+    const k=STEPS[cur], opt=k==='online'||k==='nearby', last=cur===STEPS.length-1;
+    html=`<div class="stepbar"><button class="ib" data-act="back" aria-label="Back" ${cur?'':'style="visibility:hidden"'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><span class="n">Step ${cur+1} of ${STEPS.length}</span>${opt&&!last?`<button class="link" data-act="skip">Skip</button>`:'<span style="width:44px"></span>'}</div>
+      <div class="prog">${STEPS.map((_,i)=>`<i class="${i<=cur?'on':''}"></i>`).join('')}</div>
+      ${stepHtml(k,true)}
+      <div class="bottom">${cur>0?`<div class="ctxline">${esc([summaryValue('who'),summaryValue('where'),summaryValue('what')].filter(Boolean).join(' · '))}</div>`:''}
+      ${last?`<button class="primary" data-act="find" ${allOk()?'':'disabled'}>Find the best option</button>`:`<button class="primary" data-act="next">Next</button>`}</div>`;
+  } else {
+    const CS=CARD_STEPS, k=CS[cur];
+    const LB={who:'For',where:'Where',online:'Online',nearby:'Nearby'};
+    html=`<section class="step" style="margin-top:8px"><h2>${TITLES.what}</h2><p class="sub">${SUBS.what}</p>${stepBody('what')}</section>
+      <p class="sub" style="margin:26px 0 8px">Optional details — fill in what you like.</p>
+      <div class="track" id="track">${CS.map(st=>`<div class="pane">${stepHtml(st)}</div>`).join('')}</div>
+      <div class="dots">${CS.map((_,i)=>`<i class="${i===cur?'on':''}"></i>`).join('')}</div>
+      <div class="sumcard fixed" id="sum">${CS.map((st,i)=>{const v=summaryValue(st);const c=i===cur;return `<button class="srow ${c?'cur':''}" data-act="jump" data-i="${i}"><span class="k">${LB[st]}</span><span class="v ${v?'':'empty'}">${v?esc(v):'…'}</span>${!c?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>':''}</button>`;}).join('')}</div>
+      <div class="bottom"><button class="primary" data-act="find">Find the best option</button><button class="ghost" data-act="next">Next detail</button></div>`;
+  }
+  app.innerHTML=html;
+  const tr=$('track');
+  if(tr){const w=tr.clientWidth+24;const from=prevCur;tr.scrollLeft=from*w;prevCur=cur;requestAnimationFrame(()=>{if(tr.scrollTo)tr.scrollTo({left:cur*w,behavior:from===cur?'auto':'smooth'});else tr.scrollLeft=cur*w;});
+    let t;tr.addEventListener('scroll',()=>{clearTimeout(t);t=setTimeout(()=>{const i=Math.round(tr.scrollLeft/w);if(i!==cur&&i>=0&&i<S().length){cur=i;prevCur=i;syncSummary();}},80);},{passive:true});}
+}
+function syncSummary(){
+  const sum=$('sum'); if(!sum) return;
+  sum.querySelectorAll('.srow').forEach((r,i)=>r.classList.toggle('cur',i===cur));
+  app.querySelectorAll('.dots i').forEach((d,i)=>d.classList.toggle('on',i===cur));
+}
+function renderBusy(){app.innerHTML=`<div class="status"><span class="spin"></span><span id="stext">Researching the best option for “${esc(A.need)}”…</span><button class="stop" data-act="stop">Stop</button></div>`;}
+function renderResult(){
+  if(err){app.innerHTML=`${stateHtml('error',{code:err})}<div class="bottom"><button class="ghost" data-act="retry">Try again</button><button class="ghost" data-act="new">New search</button></div>`;return;}
+  const d=result,b=d.best||{},local=Array.isArray(d.local)?d.local:[],online=Array.isArray(d.online)?d.online:[],tips=Array.isArray(d.tips)?d.tips:[];
+  const place=d.place||summaryValue('where')||'your location';
+  const row=(n,s,w,p,ps,u)=>`<div class="row"><div class="who"><div class="nm">${esc(n)}</div>${s?`<div class="sb">${esc(s)}</div>`:''}${w?`<div class="why">${esc(w)}</div>`:''}${u?`<a class="link" href="${esc(u)}" target="_blank" rel="noopener">Open store</a>`:''}</div><div class="price">${esc(p||'—')}${ps?`<small>${esc(ps)}</small>`:''}</div></div>`;
+  app.innerHTML=`<section class="results">
+    <div class="ctx"><span>${esc(A.need)}</span><span>${esc(summaryValue('who')||'For me')}</span><span>${esc(place)}</span>${Engine.badge()}</div>
+    <p class="summary">${esc(d.summary||'')}</p>
+    <div class="group"><h3>Best option</h3><div class="card best"><div class="row"><div class="who"><span class="pill">Recommended</span> ${lblHtml('AI_ESTIMATE')}<div class="nm">${esc(b.name||A.need)}</div>${b.where?`<div class="sb">${esc(b.where)}</div>`:''}${b.reason?`<div class="why">${esc(b.reason)}</div>`:''}</div><div class="price">${esc(b.price||'—')}</div></div></div></div>
+    ${saverTable(d)}
+    ${tips.length?`<div class="group"><h3>Before you buy</h3><ul class="tips">${tips.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`:''}
+    <p class="note">Labels tell you where each price comes from. AI estimates are never live prices — confirm before paying.${Engine.mode==='mock'?' Mock engine: no provider key configured.':''}</p>${Caps.note('saver.live_prices')?`<p class="cap">${esc(Caps.note('saver.live_prices'))}</p>`:''}
+    <div class="bottom"><button class="primary" data-act="new">New search</button></div></section>`;
+}
+function safeUrl(u){try{const x=new URL(u);return x.protocol==='https:'?x.href:null}catch(e){return null}}
+// ---- Price labels (never upgrade a label): LIVE_PRICE | LAST_KNOWN_PRICE | USER_PROVIDED_PRICE | AI_ESTIMATE
+// ===== Provenance primitive: one vocabulary for every helper (labels, freshness, badge). Mirrors lib/provenance.js on the server.
+const LABEL={LIVE_PRICE:['Live price','live'],LAST_KNOWN_PRICE:['Last known price','known'],USER_PROVIDED_PRICE:['Your price','user'],AI_ESTIMATE:['AI estimate',''],UNAVAILABLE:['Price unavailable','unavail']};
+const Prov={
+  LABEL, ELIGIBLE_FOR_ALERT:['LIVE_PRICE','LAST_KNOWN_PRICE'],
+  freshness(t){if(!t)return 'unknown';const m=(Date.now()-new Date(t))/6e4;return isNaN(m)?'unknown':m<60?'fresh':m<1440?'today':'stale';},
+  badge(label,opt={}){const l=LABEL[label]||LABEL.AI_ESTIMATE;const f=opt.observedAt?this.freshness(opt.observedAt):null;const src=opt.source?` · ${opt.source.replace(/_/g,' ')}`:'';const fr=f&&f!=='unknown'?` · ${f==='fresh'?'just checked':f==='today'?'checked today':'older data'}`:'';return `<span class="lbl ${l[1]}" title="${esc(l[0]+src+fr)}">${l[0]}${f==='stale'?' · older':''}</span>`;},
+  eligible(x){return this.ELIGIBLE_FOR_ALERT.includes(x&&x.label);}
+};
+const BOOKPATH={deep_link:'Opens the provider',affiliate:'Book on partner site',api_quote:'Quote via provider',api:'Booked here (not live)',phone:'Call to book'};
+const lblHtml=(k,opt)=>Prov.badge(k,opt||{});
+let userPrices=Array.isArray(load('aisaver.userprices'))?load('aisaver.userprices'):[];
+let saved=Array.isArray(load('aisaver.saved'))?load('aisaver.saved'):[];
+let alerts=Array.isArray(load('aisaver.alerts'))?load('aisaver.alerts'):[];
+let sortMode=load('aisaver.sort')||'trust';
+async function fetchRealPrices(q){ // real sources only exist on the server; inside claude.ai there are none
+  if(Engine.name!=='http')return {results:[],errors:{engine:'no_server'}};
+  try{const r=await fetch('/api/prices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,city:summaryValue('where')||load('aisaver.city')||'Dubai'})});return r.ok?await r.json():{results:[],errors:{http:r.status}};}catch(e){return {results:[],errors:{net:'failed'}};}
+}
+function priceRows(d){
+  const need=A.need.trim(); const rows=[];
+  (d.real&&d.real.results||[]).forEach(r=>{if(r.price)rows.push({merchant:r.merchant||r.source,kind:r.kind||'online',price:r.price,label:r.label||'LAST_KNOWN_PRICE',fresh:r.freshness,source:r.source,url:safeUrl(r.url),note:r.title||''});});
+  userPrices.filter(u=>u.need===need).forEach(u=>rows.push({merchant:u.store,kind:u.kind,price:u.price,label:'USER_PROVIDED_PRICE',fresh:u.ts,url:null,note:'entered by you'}));
+  (d.local||[]).forEach(x=>rows.push({merchant:x.store,kind:'physical',price:x.price,label:'AI_ESTIMATE',fresh:null,url:null,note:[x.area,x.note].filter(Boolean).join(' · ')}));
+  (d.online||[]).forEach(x=>rows.push({merchant:x.store,kind:'online',price:x.price,label:'AI_ESTIMATE',fresh:null,url:safeUrl(x.url),note:[x.delivery,x.note].filter(Boolean).join(' · ')}));
+  const order={LIVE_PRICE:0,LAST_KNOWN_PRICE:1,USER_PROVIDED_PRICE:2,AI_ESTIMATE:3}; const num=p=>{const m=String(p||'').replace(/,/g,'').match(/[\d.]+/);return m?parseFloat(m[0]):Infinity;};
+  let out=rows;
+  if(sortMode==='online')out=rows.filter(r=>r.kind==='online'); else if(sortMode==='physical')out=rows.filter(r=>r.kind==='physical'); else if(sortMode==='available')out=rows.filter(r=>r.label!=='AI_ESTIMATE'&&r.availability!==false);
+  if(sortMode==='price')return out.sort((a,b)=>num(a.price)-num(b.price));
+  return out.sort((a,b)=>order[a.label]-order[b.label]||num(a.price)-num(b.price));
+}
+const fmtFresh=t=>{if(!t)return '';const d=new Date(t);if(isNaN(d))return '';const m=Math.round((Date.now()-d)/6e4);return m<2?'just now':m<60?`${m} min ago`:m<1440?`${Math.round(m/60)} h ago`:d.toLocaleDateString('en-GB');};
+function saverTable(d){
+  const rows=priceRows(d);
+  const bar=`<div class="sortbar">${[['trust','Most reliable'],['price','Lowest price'],['online','Online'],['physical','In store'],['available','Confirmed only']].map(([k,l])=>`<button class="${sortMode===k?'on':''}" data-act="sort" data-k="${k}" aria-pressed="${sortMode===k}">${l}</button>`).join('')}</div>`;
+  if(!rows.length)return `<div class="group"><h3>Price comparison</h3>${bar}${stateHtml('empty',{text:sortMode==='available'?'No confirmed prices yet — connect a store or add one you saw.':'No prices to show.'})}</div>`;
+  return `<div class="group"><h3>Price comparison</h3>${bar}<div style="overflow-x:auto"><table class="ptab"><tr><th>Merchant</th><th>Where</th><th style="text-align:right">Price</th><th>Data</th></tr>${rows.map(r=>`<tr><td><button class="link" data-act="inspect" data-m="${esc(r.merchant||'')}" data-k="${r.kind}" data-l="${r.label}" data-p="${esc(r.price||'')}" data-u="${esc(r.url||'')}" data-f="${esc(r.fresh||'')}" data-s="${esc(r.source||'')}" data-n="${esc(r.note||'')}" style="font-weight:600;color:var(--ink)">${esc(r.merchant||'—')}</button>${r.note?`<div style="font-size:.85em;color:var(--ink-2)">${esc(r.note)}</div>`:''}${r.url?`<a href="${esc(r.url)}" target="_blank" rel="noopener">Open</a>`:''}</td><td>${r.kind==='physical'?'In store':'Online'}</td><td class="pr">${esc(r.price||'—')}</td><td>${lblHtml(r.label,{source:r.source,observedAt:r.fresh})}${r.fresh?`<div style="font-size:.8em;color:var(--ink-3)">${esc(fmtFresh(r.fresh))}</div>`:''}</td></tr>`).join('')}</table></div>
+  <div class="chips" style="margin-top:10px"><button class="chip add" data-act="price-add">+ I saw a price</button><button class="chip" data-act="save-search">${saved.some(x=>x.need===A.need.trim())?'Saved':'Save'}</button><button class="chip" data-act="share-search">Share</button><button class="chip" data-act="price-alert">${alerts.some(x=>x.need===A.need.trim())?'Alert set':'Alert me if it drops'}</button></div></div>`;
+}
+function shareText(d){const b=d.best||{};return `AI SAVER — ${A.need.trim()}\nBest: ${b.name||''} ${b.price||''} (${b.where||''})\n${(priceRows(d).slice(0,5).map(r=>`${r.merchant}: ${r.price} [${LABEL[r.label][0]}]`).join('\n'))}`;}
+
+app.addEventListener('input',e=>{if(e.target.id==='ask'){M.q=e.target.value;return;}if(e.target.id==='rtext'){R.text=e.target.value;return;}if(e.target.id==='ctext'){C.text=e.target.value;return;}if(e.target.id==='stext'){SP.cur.text=e.target.value;return;}if(e.target.id==='ktext'){K.q=e.target.value;return;}if(e.target.dataset.pts){const v=e.target.value.replace(/[^\d]/g,'').slice(0,9);if(v!==e.target.value)e.target.value=v;cash.pts[e.target.dataset.pts]=v;saveCash();return;}if(e.target.dataset.rf){R.form[e.target.dataset.rf]=e.target.value;return;}const f=e.target.dataset.f;if(!f)return;A[f]=e.target.value;
+  const sum=$('sum'); if(sum){const r=sum.querySelectorAll('.srow .v')[cur];const v=summaryValue(S()[cur]);if(r){r.textContent=v||'…';r.classList.toggle('empty',!v);}}
+  const btn=app.querySelector('[data-act="reveal"],[data-act="next"],[data-act="find"]'); if(btn){if(btn.dataset.act==='find')btn.disabled=!allOk();else if(btn.dataset.act==='reveal')btn.disabled=!ok.what();}
+});
+app.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='ask'){e.preventDefault();askMaster();}else if(e.key==='Enter'&&e.target.id==='rtext'){e.preventDefault();parseReminder();}else if(e.key==='Enter'&&e.target.id==='ctext'){e.preventDefault();sendConcierge();}else if(e.key==='Enter'&&e.target.id==='stext'){e.preventDefault();sendSpec();}else if(e.key==='Enter'&&e.target.id==='ktext'){e.preventDefault();cashAsk();}else if(e.key==='Enter'&&e.target.dataset.pts){e.preventDefault();render();}else if(e.key==='Enter'&&e.target.dataset.f){e.preventDefault();if(settings.layout==='card'&&e.target.dataset.f==='need'){if(allOk())run();}else advance();}});
+app.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return; const a=b.dataset.act;
+  if(a==='pick'){A[b.dataset.g]=b.dataset.v; if(b.dataset.g==='where'){A.coords=null;A.gpsMsg='';if(b.dataset.v==='gps')locate();} if(settings.layout==='flow'){reveal=Math.max(reveal,STEPS.indexOf(b.dataset.g)+2);}
+    if(settings.layout==='card'&&b.dataset.v==='me'&&cur===0){cur=1;} render(); focusDetail(b.dataset.g);}
+  else if(a==='chip'){const k=b.dataset.k,v=b.dataset.v;A[k]=A[k].includes(v)?A[k].filter(x=>x!==v):[...A[k],v];render();}
+  else if(a==='other'){const k=b.dataset.k;A[k+'OtherOpen']=!A[k+'OtherOpen'];render();const i=app.querySelector(`[data-f="${k}Other"]`);if(i)i.focus();}
+  else if(a==='reveal'){reveal=Math.max(reveal,4);render();const s=app.querySelector('[data-step="online"]');if(s)s.scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>{reveal=5;render();},50);}
+  else if(a==='next'){advance();}
+  else if(a==='skip'){cur=Math.min(cur+1,STEPS.length-1);render();window.scrollTo({top:0,behavior:'smooth'});}
+  else if(a==='back'){cur=Math.max(cur-1,0);render();}
+  else if(a==='jump'){cur=+b.dataset.i;render();}
+  else if(a==='find'){if(allOk())run();else toast('Tell me what you need first');}
+  else if(a==='inspect'){const d=b.dataset;const url=safeUrl(d.u);const isPhys=d.k==='physical';
+    openSheet(`<h2>${esc(d.m)}</h2><div class="kv"><span>Item</span><span>${esc(A.need)}</span><span>Price</span><span>${esc(d.p||'—')} ${lblHtml(d.l,{source:d.s,observedAt:d.f})}</span><span>Where</span><span>${isPhys?'In store':'Online'}</span>${d.f?`<span>Observed</span><span>${esc(fmtFresh(d.f))}</span>`:''}${d.s?`<span>Source</span><span>${esc(d.s.replace(/_/g,' '))}</span>`:''}${d.n?`<span>Notes</span><span>${esc(d.n)}</span>`:''}</div>${d.l==='AI_ESTIMATE'?'<p class="sub">This is an estimate — confirm the price before buying.</p>':''}<div class="chips">${url?`<a class="chip" href="${esc(url)}" target="_blank" rel="noopener">Open merchant</a>`:''}${isPhys&&Caps.can('saver.nearby_stores')?`<a class="chip" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.m+' '+(summaryValue('where')||'Dubai'))}" target="_blank" rel="noopener">Map store</a>`:isPhys?`<span class="chip" style="opacity:.6">Store location not sourced</span>`:''}<button class="chip" data-act="save-search">Save search</button><button class="chip" data-act="price-alert">Alert</button><button class="chip" data-act="sheet-close">Close</button></div>`);}
+  else if(a==='sort'){sortMode=b.dataset.k;save('aisaver.sort',sortMode);render();}
+  else if(a==='price-add'){openSheet(`<h2>I saw a price</h2><p class="sub">Your own price is kept separate and never shown as live.</p><input class="txt" id="upStore" placeholder="Store, e.g. Carrefour Marina"><div class="chips" style="margin:10px 0" id="upKind"><button class="chip on" data-k="physical">In store</button><button class="chip" data-k="online">Online</button></div><input class="txt" id="upPrice" inputmode="decimal" placeholder="Price, e.g. AED 249"><button class="primary" data-act="price-save" style="margin-top:14px">Add</button>`);}
+  else if(a==='save-search'){const n=A.need.trim();if(!saved.some(x=>x.need===n)){saved=[{need:n,best:result&&result.best&&result.best.name||'',price:result&&result.best&&result.best.price||'',label:'AI_ESTIMATE',prefs:{who:A.who,where:summaryValue('where'),online:A.online,nearby:A.nearby,sort:sortMode},lastRun:Date.now(),ts:Date.now()},...saved].slice(0,50);Notif.add({type:'saved',title:'Saved: '+n,message:'Reopen it from the menu any time.',helper:'AI SAVER'});save('aisaver.saved',saved);if(Engine.name==='http'&&settings.user){fetch('/api/saved',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:n,prefs:saved[0].prefs})}).catch(()=>{});}toast('Saved');render();}else toast('Already saved');}
+  else if(a==='share-search'){const t=shareText(result||{});if(navigator.share){navigator.share({title:'AI SAVER',text:t}).catch(()=>{});}else{navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>toast('Copied to clipboard')).catch(()=>toast('Could not copy'));}}
+  else if(a==='price-alert'){const n=A.need.trim();if(!alerts.some(x=>x.need===n)){alerts=[{need:n,ref:result&&result.best&&result.best.price||'',ts:Date.now(),status:'active'},...alerts];save('aisaver.alerts',alerts);if(Engine.name==='http'&&settings.user){fetch('/api/alerts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:n,condition:{type:'below',value:parseFloat(String(alerts[0].ref).replace(/[^\d.]/g,''))||0},locationScope:summaryValue('where')})}).catch(()=>{});}alerts[0].id='a'+Date.now().toString(36);alerts[0].history=[{at:Date.now(),event:'created',detail:Caps.can('saver.alert_evaluation')?'monitoring available':'stored — no eligible price source yet'}];Notif.add({type:'alert',title:'Alert created: '+n,message:Caps.can('saver.alert_evaluation')?'Will be evaluated when prices are observed.':'Stored only — no eligible price source connected.',helper:'AI SAVER',dest:{alertId:alerts[0].id}});toast('Alert stored');render();}else toast('Alert already set');}
+  else if(a==='stop'){ctl&&ctl.abort();}
+  else if(a==='retry'){err=null;run();}
+  else if(a==='new'){resetAll();}
+  else if(a==='back-master'){M.q='';M.lastHelper=null;HANDOFF.text='';goHome();}
+  else if(a==='helper'){if(!openHelper(b.dataset.id))toast('This helper is coming soon');}
+  else if(a==='mic'){voice(b,'need',t=>{A.need=t;const g=app.querySelector('[data-act="reveal"]');if(g)g.disabled=!t.trim();},()=>{if(!A.need.trim())return;if(settings.layout==='card')run();else advance();});}
+  else if(a==='mic-home'){voice(b,'ask',t=>{M.q=t;},()=>{if(M.q.trim())askMaster();});}
+  else if(a==='ask'){askMaster();}
+  else if(a==='go'){openHelper(b.dataset.h,'');}
+  else if(a==='rem-done-home'){const r=reminders.find(x=>x.id===b.dataset.id);if(r){r.done=true;saveRem();render();toast('Done');}}
+  else if(a==='alert-open-home'){const i=alerts.findIndex(x=>(x.id||x.need)===b.dataset.aid);if(i>=0)alertHistory(i);else toast('That alert no longer exists');}
+  else if(a==='saved-run-home'){const x=saved.find(y=>y.need===b.dataset.need);if(!x){toast('That saved search no longer exists');return;}resetAll();A.need=x.need;if(x.prefs){A.who=x.prefs.who||'';A.online=x.prefs.online||[];A.nearby=x.prefs.nearby||[];}render();run();}
+  else if(a==='ask-retry'){M.q=M.lastQ||M.q;askMaster();}
+  else if(a==='rem-parse'){parseReminder();}
+  else if(a==='con-send'){sendConcierge();}
+  else if(a==='spec-send'){sendSpec();}
+  else if(a==='spec-quick'){SP.cur.text=b.dataset.q;sendSpec();}
+  else if(a==='spec-toggle'){SP.cur.open=!SP.cur.open;render();}
+  else if(a==='spec-retry'){SP.cur.text=b.dataset.q;sendSpec();}
+  else if(a==='trip-edit'){const k=b.dataset.k;const T=TRIP.t;const lbl={kind:'What do you need?',from:'Leaving from (city)',to:'Going to (city)',out:'Departure / check-in date',back:'Return / check-out date',adults:'How many travellers?'}[k];
+    if(k==='kind'){openSheet(`<h2>${lbl}</h2><div class="chips" id="tripKind">${[['flight','Flights'],['hotel','Hotels'],['both','Flights + hotel']].map(([v,l])=>`<button class="chip ${T.kind===v?'on':''}" data-tk="${v}">${l}</button>`).join('')}</div>`);return;}
+    openSheet(`<h2>${lbl}</h2><input class="txt" id="tripVal" type="${k==='out'||k==='back'?'date':k==='adults'?'number':'text'}" value="${esc(k==='from'||k==='to'?cityName(T[k]||''):(T[k]||''))}" placeholder="${k==='from'||k==='to'?'e.g. Rome':''}"><button class="primary" data-act="trip-save" data-k="${k}" style="margin-top:14px">Save</button>`);}
+  else if(a==='trip-save'){const k=b.dataset.k;const v=($('tripVal').value||'').trim();const T=TRIP.t;if(k==='from'||k==='to'){const key=v.toLowerCase();T[k]=key?(CITY_IATA[key]!==undefined?key:key):null;}else if(k==='adults'){T.adults=parseInt(v,10)||null;}else{T[k]=v||null;if(k==='out'&&T.back&&T.back<T.out)T.back=null;}closeSheet();render();const q=tripQuestion(T);if(!q&&SP.cur){SP.cur.text=`Search ${T.kind} ${T.from?'from '+cityName(T.from):''} to ${cityName(T.to)} ${T.out||''}`.replace(/\s+/g,' ');sendSpec();}}
+  else if(a==='spec-det'){const st=SP.cur,k=b.dataset.k,o=b.dataset.o;if(b.dataset.m==='1'){const v=st.det[k]||[];st.det[k]=v.includes(o)?v.filter(x=>x!==o):[...v,o];}else st.det[k]=st.det[k]===o?'':o;render();}
+  else if(a==='mic-spec'){voice(b,'stext',t=>{SP.cur.text=t;},()=>{if(SP.cur.text.trim())sendSpec();});}
+  else if(a==='cash-ask'){cashAsk();}
+  else if(a==='cash-prog-del'){const id=b.dataset.id;cash.custom=cash.custom.filter(n=>'c_'+n.toLowerCase().replace(/\W+/g,'')!==id);delete cash.pts[id];cash.goals=cash.goals.filter(g=>g.prog!==id);saveCash();render();}
+  else if(a==='cash-add'){openSheet(`<h2>Add a program</h2><input class="txt" id="pName" placeholder="Program name, e.g. Etihad Guest"><button class="primary" data-act="prog-save" style="margin-top:14px">Add</button>`);}
+  else if(a==='cash-connect'){helperSheet('cashback');}
+  else if(a==='cash-goal'){goalSheet();}
+  else if(a==='cash-goal-del'){cash.goals.splice(+b.dataset.i,1);saveCash();render();}
+  else if(a==='con-quick'){C.text=b.dataset.q;sendConcierge();}
+  else if(a==='mic-con'){voice(b,'ctext',t=>{C.text=t;},()=>{if(C.text.trim())sendConcierge();});}
+  else if(a==='con-act'){conAction(b.dataset.k,b.dataset.n,b.dataset.a);}
+  else if(a==='mic-rem'){voice(b,'rtext',t=>{R.text=t;},()=>{if(R.text.trim())parseReminder();});}
+  else if(a==='mic-remform'){voice(b,'rtitle',t=>{R.form.title=t;R.text=t;},()=>{if(R.text.trim())parseReminder();});}
+  else if(a==='rem-save'){if(R.draft)saveDraft(R.draft);}
+  else if(a==='rem-edit'){if(R.draft){Object.assign(R.form,{title:R.draft.title,when:R.draft.when.slice(0,16),type:R.draft.type,repeat:R.draft.repeat,alert:R.draft.alert});R.draft=null;settings.rem='form';applySettings();render();}}
+  else if(a==='rem-form-save'){const f=R.form;if(!f.title.trim()){toast('Write what to remember');return;}if(!f.when){toast('Pick a date and time');return;}if(R.editing){const r=reminders.find(x=>x.id===R.editing);if(r){Object.assign(r,{title:f.title.trim(),when:f.when,type:f.type,repeat:f.repeat,alert:f.alert});saveRem();}R.editing=null;R.form={title:'',when:'',type:'payment',repeat:'none',alert:'1d'};toast('Reminder updated');render();}else saveDraft({title:f.title.trim(),when:f.when,allDay:false,type:f.type,repeat:f.repeat,alert:f.alert,place:''});}
+  else if(a==='rem-when'){const k=b.dataset.k,d=new Date();if(k==='today18'){d.setHours(18,0,0,0);}else if(k==='tom9'){d.setDate(d.getDate()+1);d.setHours(9,0,0,0);}else{d.setDate(d.getDate()+((6-d.getDay()+7)%7||7));d.setHours(10,0,0,0);}const pad=n=>String(n).padStart(2,'0');R.form.when=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;render();}
+  else if(a==='rem-type'){R.form.type=b.dataset.k;render();}
+  else if(a==='rem-filter'){R.filter=b.dataset.k;render();}
+  else if(a==='rem-edit2'){const r=reminders.find(x=>x.id===b.dataset.id);if(r){Object.assign(R.form,{title:r.title,when:String(r.when).slice(0,16),type:r.type,repeat:r.repeat||'none',alert:r.alert||'1d'});R.editing=r.id;settings.rem='form';applySettings();render();}}
+  else if(a==='rem-ics'){const r=reminders.find(x=>x.id===b.dataset.id);if(r)exportIcs([r],'reminder.ics');}
+  else if(a==='rem-ics-all'){exportIcs(reminders.filter(x=>!x.done),'ai-reminder.ics');}
+  else if(a==='rem-done'){const r=reminders.find(x=>x.id===b.dataset.id);if(r){r.done=!r.done;saveRem();render();}}
+  else if(a==='rem-snooze'){const r=reminders.find(x=>x.id===b.dataset.id);if(r){const d=new Date(r.when);d.setHours(d.getHours()+1);r.when=d.toISOString().slice(0,19);saveRem();render();toast('Snoozed 1 hour');}}
+  else if(a==='rem-del'){reminders=reminders.filter(x=>x.id!==b.dataset.id);saveRem();Notif.prune();render();}
+  else if(a==='stop-home'){M.ctl&&M.ctl.abort();}
+});
+function focusDetail(g){const i=app.querySelector(`[data-f="${g}Text"]`);if(i)i.focus();}
+function advance(){
+  if(settings.layout==='flow'){ if(reveal<=3&&A.need.trim()){reveal=5;render();} return; }
+  if(settings.layout==='card'){ cur=(cur+1)%CARD_STEPS.length; render(); return; }
+  if(cur===STEPS.length-1){ if(allOk()) run(); else toast('Tell me what you need first'); return; }
+  cur++; render(); window.scrollTo({top:0,behavior:'smooth'});
+}
+function locate(){
+  if(!navigator.geolocation){A.gpsMsg='GPS is not available on this device — type where you are instead.';render();return;}
+  navigator.geolocation.getCurrentPosition(p=>{A.coords={lat:+p.coords.latitude.toFixed(4),lng:+p.coords.longitude.toFixed(4)};A.gpsMsg=`Location connected (${A.coords.lat}, ${A.coords.lng})`;if(settings.layout==='flow')reveal=Math.max(reveal,3);if(settings.layout==='card'&&cur===1)cur=2;render();},
+    e=>{A.gpsMsg=e.code===1?'Location access is off. Allow it in your browser, or type where you are.':'Could not get your location — type where you are instead.';render();},{timeout:12000,maximumAge:60000});
+}
+
+// ---------- voice
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition; let rec=null,listening=false;
+function voice(btn,inputId,onText,onDone){
+  const hint=$('hint'); if(!SR){if(hint)hint.textContent='Voice is not supported on this browser';return;}
+  if(listening){rec.stop();return;}
+  rec=new SR();rec.lang=navigator.language||'en-US';rec.interimResults=true;rec.continuous=false;
+  rec.onstart=()=>{listening=true;btn.classList.add('on');if(hint)hint.textContent='Listening…';};
+  rec.onresult=e=>{let t='';for(const r of e.results)t+=r[0].transcript;const i=$(inputId);if(i)i.value=t;onText(t);};
+  rec.onerror=e=>{if(hint)hint.textContent=e.error==='not-allowed'?'Microphone access is off':'Could not hear that — try again';};
+  rec.onend=()=>{listening=false;btn.classList.remove('on');if(hint)hint.textContent='Type or tap the mic';onDone();};
+  try{rec.start();}catch(e){if(hint)hint.textContent='Could not start the mic';}
+}
+
+// ---------- AI
+// ===== Engine adapter. Providers: 'claude-runtime' (inside claude.ai), 'http' (/api/ai on our server), 'reai' (future: same http contract, different backend).
+const Engine={provider:null,name:'',mode:'live',providerName:'',
+  badge(){return this.mode==='mock'?'<span class="mockbadge">Mock engine</span>':'';},
+  async init(){
+    if(window.claude&&claude.use){const s=await claude.use('sample');if(s){this.provider={json:(p,o)=>s.json(p,o)};this.name='claude-runtime';return;}}
+    this.provider={json:async(prompt,opts={})=>{const r=await fetch('/api/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,tier:opts.modelTier||'default'}),signal:opts.signal});const j=await r.json().catch(()=>({error:'bad_response'}));if(!r.ok||j.error){const e=new Error(j.error||'failed');e.code=j.error||'failed';throw e;}if(j.engine){Engine.mode=j.engine.mode;Engine.providerName=j.engine.provider;}return j.data;}};
+    this.name='http';
+  },
+  json(prompt,opts){if(!this.provider)throw Object.assign(new Error('not_ready'),{code:'not_ready'});return this.provider.json(prompt,opts);}
+};
+Engine.init().then(()=>{sample=Engine;return Promise.all([Identity.restore(),Caps.load()]);}).then(()=>SettingsSync.pull()).then(()=>{Notif.systemChecks();if(view==='home')render();}).catch(()=>{});
+// ===== Settings sync through the repository (/api/me prefs). Only explicit, user-owned preferences; never conversation data. Newer updatedAt wins; local is the fallback when signed out.
+const SettingsSync={lastPushed:0,FIELDS:['layout','rem','theme','text','readback','conn','city'],
+  snapshot(){const o={};for(const k of this.FIELDS)o[k]=k==='city'?(load('aisaver.city')||''):settings[k];o.updatedAt=settings.updatedAt||0;return o;},
+  apply(remote){if(!remote||typeof remote!=='object')return 'none';const rt=+remote.updatedAt||0,lt=+settings.updatedAt||0;
+    if(rt>lt){for(const k of this.FIELDS){if(k==='city'){if(remote.city)save('aisaver.city',remote.city);}else if(remote[k]!==undefined)settings[k]=remote[k];}settings.updatedAt=rt;this.lastPushed=rt;Store.set('aisaver.settings',settings);applySettings();return 'remote';}
+    if(lt>rt)return 'local'; return 'equal';},
+  async pull(){if(Engine.name!=='http'||!settings.user)return 'offline';try{const r=await fetch('/api/me');if(!r.ok)return 'signed_out';const j=await r.json();const res=this.apply(j.prefs&&j.prefs.settings);if(res==='local')await this.push();return res;}catch(e){return 'error';}},
+  async push(){if(Engine.name!=='http'||!settings.user)return false;try{const r=await fetch('/api/me',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prefs:{settings:this.snapshot()}})});return r.ok;}catch(e){return false;}}
+};
+// ===== Identity adapter. reID is the ecosystem identity; 'stub' mimics its flow until the OAuth endpoint exists. Google goes through the same adapter.
+const Identity={provider:'stub',
+  async signIn(via){ // on our server: real OAuth round-trip via /api/auth; inside claude.ai: local stub session
+    if(Engine.name==='http'){location.href=`/api/auth/start?provider=${via==='reID'?'reid':'google'}`;return new Promise(()=>{});}
+    return {name:via==='reID'?'reID user (stub)':'Google user (stub)',via:via+' · stub session',stub:true};
+  },
+  async restore(){ // server session -> settings.user (+ prefs merged by SettingsSync.pull)
+    if(Engine.name!=='http')return; try{const r=await fetch('/api/me');if(r.ok){const j=await r.json();if(j.user){settings.user={name:j.user.name,via:j.user.via};Store.set('aisaver.settings',settings);document.documentElement.setAttribute('data-text',settings.text);}}}catch(e){}
+  },
+  signOut(){settings.user=null;applySettings();if(Engine.name==='http'){fetch('/api/auth/logout',{method:'POST'}).catch(()=>{});}}
+};
+function prompt(){
+  const who=!A.who?'the user themselves (not specified)':{me:'the user themselves',other:'someone else'+(A.whoText.trim()?` (${A.whoText.trim()})`:''),work:'work or business use'+(A.whoText.trim()?` (${A.whoText.trim()})`:'')}[A.who];
+  const place=!ok.where()?(A.whereCity.trim()?`the user's city: ${A.whereCity.trim()}`:`not specified (assume the user is in Dubai, UAE unless the item suggests otherwise; say which city you assumed in "place")`):A.where==='gps'?`the user's current GPS position, approximately latitude ${A.coords.lat}, longitude ${A.coords.lng} (work out the city and area from these coordinates)`:A.where==='city'?`the user's current location: ${summaryValue('where')}`:`a different place from where the user is now; the item is needed in: ${summaryValue('where')}`;
+  const on=summaryValue('online'), nb=summaryValue('nearby');
+  const acc=(SERVICES.saver||[]).filter(s=>settings.conn[s.id]==='connected').map(s=>s.name).join(', ');
+  return `You are AI SAVER, a purchasing researcher. The user needs to buy: "${A.need.trim()}".
+It is for ${who}. The place where it is needed is ${place}.
+${on?`Online stores the user usually shops at: ${on}. Include each of these that could carry the item, with its price, so they can compare.\n`:''}${acc?`The user has connected accounts at: ${acc}; prioritise these stores and mention member prices or delivery benefits where relevant.\n`:''}${nb?`Physical stores the user usually visits: ${nb}. Include each of these that could carry the item, with its price and branch area, so they can compare.\n`:''}Recommend the single best option (value for money, reliability, availability, suited to who it is for), then list where to buy it locally in that place (physical stores or same-city retailers) and online (shipping there). Use your best knowledge of typical current prices in the local currency of that place; be specific with product names, models and store names, and be honest where a price is an estimate.
+Reply with ONLY this JSON, no prose:
+{"place":"the city/area you used","summary":"2 sentences: what to buy and why","best":{"name":"exact product","reason":"one line","price":"e.g. AED 249","where":"store name"},"local":[{"store":"name","area":"district or mall","price":"…","note":"why / what to check"}],"online":[{"store":"site name","price":"…","delivery":"e.g. 1–2 days","note":"why","url":"https://…"}],"tips":["short tip","short tip"]}
+Give 2–5 local and 2–5 online options.`;
+}
+async function run(){
+  if(!allOk()) return;
+  const ok=await askPermission('saver','To compare prices with your own accounts and delivery options, AI SAVER can use the stores you already shop at.'); if(!ok) return;
+  if(!sample){err='not_ready';render();return;}
+  if(A.where!=='gps'&&A.whereCity.trim()&&load('aisaver.city')!==A.whereCity.trim()){save('aisaver.city',A.whereCity.trim());touchSettings();applySettings();}
+  busy=true; err=null; result=null; render(); window.scrollTo({top:0,behavior:'smooth'});
+  ctl=new AbortController();
+  try{
+    const [d,real]=await Promise.all([sample.json(prompt(),{signal:ctl.signal,modelTier:'default',cache:false,onText:()=>{const s=$('stext');if(s)s.textContent='Comparing options…';}}),fetchRealPrices(A.need.trim())]);
+    d.real=real; result=d; Conv.set({helper:'saver'}); Conv.result('saver',[...(d.best?[{title:d.best.name,price:d.best.price}]:[]),...(d.local||[]).map(x=>({title:x.store,price:x.price})),...(d.online||[]).map(x=>({title:x.store,price:x.price,url:x.url}))],A.need.trim());
+    history=[{need:A.need.trim(),best:d.best&&d.best.name||'',price:d.best&&d.best.price||'',place:d.place||summaryValue('where'),ts:Date.now()},...history].slice(0,20); save('aisaver.history',history);
+  }catch(e){
+    err=e.code==='cancelled'?null:(e.code||'failed');
+  }
+  busy=false; render();
+}
+
+// Startup sequence: 1) local persistent objects already loaded above, 2) render Home from restored state (no default flash), 3) engine + identity + capabilities, 4) settings merge from the repository when a session exists, 5) attention/notification checks.
+Notif.init(); Notif.badge(); Notif.prune(); applySettings(); goHome();
+window.__ah={preParseReminder,priceRows:()=>priceRows(result||{}),fastPath,HELPER_CONTRACT,LABEL,Prov,Conv,Results,resolveReference,applyReference,handoffContext,Caps,Notif,compareText,localEvaluate,alerts:()=>alerts,saved:()=>saved,homeState,briefHtml,svcState,reminders:()=>reminders,Attention,SettingsSync,correctDraft,settings:()=>settings,R:()=>R,parseTrip,tripLinks,tripQuestion,TRIP,SP,cash:()=>cash,sportLiveGuard};
+})();
+</script>
+</body>
+</html>

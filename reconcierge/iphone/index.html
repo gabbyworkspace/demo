@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>reConcierge iPhone Prototype r3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Instrument+Serif&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --stage:#C9D2D6; --stage-ink:#2A343A;
+  --ground:#E3EAEC; --paper:#FFFFFF; --glass:rgba(255,255,255,.66); --ink:#0E1418; --sec:#3F4B53; --mute:#66727B; --hair:rgba(14,20,24,.09);
+  --sky:#BCD8E6; --sage:#CFE4DA;
+  --amber:#9A4A0B; --amber-bg:#FBEBDD; --amber-line:#E7B98F;
+  --green:#1E5B3A; --green-bg:#DDEEE4;
+  --indigo:#3B4A8C; --indigo-bg:#E4E7F5;
+  --red:#8E2F2A; --red-bg:#F6E0DE;
+  --stone:#5C6670; --stone-bg:#E6EAEC;
+  --blue:#2F4F6E; --blue-bg:#DEE7EF;
+  --sans:"Manrope",-apple-system,"SF Pro Text",system-ui,sans-serif;
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--stage);color:var(--stage-ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- reviewer stage ---------- */
+.stage{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:14px 12px 28px}
+.ctl{width:100%;max-width:980px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ctl .brand{font-weight:800;font-size:14px;letter-spacing:-.2px}
+.ctl .brand small{font-weight:500;color:#55636B;margin-left:8px}
+.seg{display:inline-flex;background:rgba(255,255,255,.55);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;font:inherit;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;color:#3B464D;cursor:pointer}
+.seg button[aria-pressed=true]{background:#0E1418;color:#fff}
+.ctl .grp{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.jump{display:flex;gap:6px;flex-wrap:wrap}
+.jump button{border:1px solid rgba(14,20,24,.15);background:rgba(255,255,255,.5);font:inherit;font-size:11.5px;font-weight:600;padding:5px 9px;border-radius:8px;color:#2A343A;cursor:pointer}
+.jump button:hover{background:#fff}
+.wrap{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;justify-content:center;width:100%;max-width:980px}
+.notes{flex:1 1 300px;max-width:420px;font-size:12.5px;line-height:1.5;color:#2A343A;background:rgba(255,255,255,.5);border-radius:14px;padding:14px 16px}
+.notes h3{margin:0 0 6px;font-size:12px;font-weight:800;letter-spacing:.2px}
+.notes p{margin:0 0 8px}
+.notes ul{margin:0 0 8px;padding-left:16px}
+.notes li{margin:2px 0}
+.notes .k{font-family:var(--mono);font-size:11px;background:rgba(14,20,24,.06);padding:1px 4px;border-radius:4px}
+
+/* ---------- phone ---------- */
+.phone{width:390px;height:844px;border-radius:44px;background:#0b0e11;padding:10px;box-shadow:0 30px 60px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.4);flex:0 0 auto;position:relative}
+.screen{position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;background:var(--ground);color:var(--ink)}
+.screen.night{--ground:#11151B;--paper:#1C2129;--glass:rgba(28,33,41,.72);--ink:#EEF1F3;--sec:#B7C0C7;--mute:#98A3AC;--hair:rgba(238,241,243,.09);
+  --amber:#E3A264;--amber-bg:#2A1D12;--amber-line:#6B4A2A;--green:#8FD1AE;--green-bg:#17301F;--indigo:#AEB7EA;--indigo-bg:#1F2440;--red:#EA9A94;--red-bg:#3A1E1C;--stone:#B4BDC4;--stone-bg:#252B31;--blue:#9CBBD6;--blue-bg:#1D2A36;--sky:#1F4652;--sage:#1E3A2E}
+.ambient{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 70% 45% at 18% 12%,var(--sky) 0%,transparent 65%)}
+.screen.night .ambient{background:radial-gradient(ellipse 70% 45% at 18% 12%,var(--sky) 0%,transparent 65%)}
+.view{position:absolute;inset:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;justify-content:space-between;padding:22px 22px 8px}
+.mark{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;letter-spacing:-.3px}
+.mark .dot{width:22px;height:22px;border-radius:50%;background:var(--ink);position:relative}
+.mark .dot::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--ground)}
+.ring{display:flex;align-items:center;gap:7px;white-space:nowrap;border:1px solid var(--hair);background:var(--glass);backdrop-filter:blur(10px);padding:0 12px 0 9px;height:44px;min-height:44px;border-radius:999px;font:inherit;font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer;position:relative}
+.ring .cnt{color:var(--sec);font-weight:600}
+.hint{position:absolute;right:0;top:50px;background:var(--ink);color:var(--ground);font-size:12.5px;font-weight:600;padding:8px 11px;border-radius:10px;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.hint::before{content:"";position:absolute;right:18px;top:-5px;width:10px;height:10px;background:var(--ink);transform:rotate(45deg)}
+.ring i{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink);display:inline-block;position:relative}
+.ring i::after{content:"";position:absolute;inset:2px;border-radius:50%;background:var(--ink);opacity:.9;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(.6);opacity:.55}50%{transform:scale(1);opacity:1}}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--ink);color:var(--ground);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.scroll{flex:1;overflow-y:auto;padding:0 22px calc(160px + env(safe-area-inset-bottom,0px));scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.greet{font-family:var(--serif);font-size:40px;line-height:1.05;margin:20px 0 12px;letter-spacing:-.4px}
+.sit{font-size:19px;font-weight:700;margin:0 0 2px}
+.sit2{font-size:16.5px;color:var(--sec);margin:0 0 18px;font-weight:500}
+.paper{background:var(--paper);border-radius:20px;box-shadow:0 8px 24px rgba(14,20,24,.06)}
+.night .paper{box-shadow:none;border:1px solid var(--hair)}
+.glass{background:var(--glass);backdrop-filter:blur(12px);border-radius:20px;border:1px solid rgba(255,255,255,.35)}
+.night .glass{border-color:var(--hair)}
+.row{display:flex;align-items:center;gap:12px;padding:14px 16px;min-height:56px;border-bottom:1px solid var(--hair);cursor:pointer}
+.row:last-child{border-bottom:0}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;font-size:15px;font-weight:700;line-height:1.25}
+.row .t span{display:block;font-size:13px;color:var(--sec);margin-top:2px}
+.row .chev{color:var(--mute);font-size:18px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:800;letter-spacing:.3px;padding:4px 8px;border-radius:999px;white-space:nowrap;text-transform:uppercase}
+.p-amber{background:var(--amber-bg);color:var(--amber)}
+.p-green{background:var(--green-bg);color:var(--green)}
+.p-indigo{background:var(--indigo-bg);color:var(--indigo);border:1px dashed var(--indigo)}
+.p-red{background:var(--red-bg);color:var(--red)}
+.p-stone{background:var(--stone-bg);color:var(--stone)}
+.p-blue{background:var(--blue-bg);color:var(--blue)}
+.p-ink{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.p-ready{background:transparent;color:var(--ink);border:1.5px solid var(--ink);text-transform:none;letter-spacing:0;font-size:12.5px}
+.p-ready::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink)}
+.flag{display:inline-block;font-size:12.5px;font-weight:700;color:var(--amber);border:1px solid var(--amber-line);border-radius:6px;padding:1px 6px;letter-spacing:.2px;vertical-align:middle}
+.halo{box-shadow:0 0 0 1px var(--amber-line),0 8px 24px rgba(154,74,11,.10)}
+.reassure{display:flex;align-items:center;gap:10px;margin:2px 2px 0;min-height:44px;font-size:13px;color:var(--sec);cursor:pointer}
+.reassure b{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;min-height:44px;border-radius:999px;font:inherit;font-weight:700;font-size:15px;padding:13px 20px;cursor:pointer;border:0}
+.b-ink{background:var(--ink);color:var(--ground)}
+.b-out{background:var(--paper);color:var(--ink);border:1.5px solid var(--hair)}
+.b-red{background:var(--paper);color:var(--red);border:1.5px solid var(--red-bg)}
+.btn.sm{font-size:13px;padding:0 14px;min-height:44px}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.w{width:100%}
+/* live row */
+.live{padding:14px 16px}
+.live .h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.live .h b{font-size:15px}
+.live .stage{font-size:13.5px;color:var(--sec);margin-top:3px}
+.bar{height:4px;border-radius:2px;background:var(--hair);margin:10px 0 8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink);border-radius:2px;transition:width .6s ease}
+.live .next{display:flex;justify-content:space-between;font-size:13px;color:var(--sec)}
+.live .next b{color:var(--ink);font-weight:700}
+.eta{font-variant-numeric:tabular-nums}
+/* sections */
+.sec{margin-top:18px}
+.sec h4{font-size:12.5px;font-weight:800;color:var(--sec);margin:0 0 8px 2px}
+.list{padding:4px 16px}
+.list .li{display:flex;gap:10px;padding:10px 0;min-height:44px;align-items:flex-start;border-bottom:1px solid var(--hair);font-size:14px;line-height:1.4}
+.list .li:last-child{border-bottom:0}
+.list .li .k{color:var(--sec);width:60px;flex:none;font-size:12.5px;font-weight:700;padding-top:1px}
+.list .li .v{flex:1}
+.ok{color:var(--green);font-weight:700}
+.showme{margin:14px 0 0;display:flex;align-items:center;gap:12px}
+/* dual entry */
+.dock{position:absolute;left:0;right:0;bottom:0;padding:8px 10px calc(16px + env(safe-area-inset-bottom,0px));background:linear-gradient(to top,var(--ground) 60%,transparent)}
+.entry{display:flex;gap:3px;background:var(--paper);border:1px solid var(--hair);border-radius:999px;padding:3px;box-shadow:0 8px 24px rgba(14,20,24,.08);width:100%;max-width:100%}
+.entry button{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;border:0;background:transparent;font:inherit;font-size:12.5px;font-weight:700;color:var(--ink);height:44px;min-height:44px;padding:0;border-radius:999px;cursor:pointer;white-space:nowrap;overflow:visible;letter-spacing:-.2px}
+.entry button .idm.sm{width:18px;height:18px}
+.entry button .idm.sm.wolf::after{width:7px;height:7px}.entry button .idm.sm.conc::after{width:7px;height:7px}
+.entry button:first-child{border-right:1px solid var(--hair);border-radius:999px 0 0 999px}
+.entry .mic{flex:0 0 44px;width:44px;min-width:44px;height:44px;border-radius:999px;background:var(--ink);color:var(--ground);border:0!important;padding:0;margin-left:0;overflow:visible}
+.idm{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:none;position:relative}
+.idm.wolf{border:2px solid var(--ink)}
+.idm.wolf::after{content:"";width:10px;height:10px;background:var(--ink);transform:rotate(45deg);border-radius:2px}
+.idm.conc{background:var(--ink)}
+.idm.conc::after{content:"";width:10px;height:10px;border-radius:50%;border:2px solid var(--ground)}
+.idm.gabi{background:var(--stone-bg);color:var(--ink);font-weight:800;font-size:12.5px}
+.idm.sm{width:22px;height:22px}
+.idm.sm.wolf::after{width:8px;height:8px}
+.idm.sm.conc::after{width:8px;height:8px}
+.tabbar{display:none}
+.tabbar button{flex:1;border:0;background:transparent;font:inherit;font-size:11.5px;font-weight:700;color:var(--mute);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+.tabbar button[aria-current=page]{color:var(--ink)}
+.tabbar svg{width:22px;height:22px}
+.dock.b{bottom:66px}
+/* conversation */
+.chead{padding:20px 18px 12px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--hair);background:var(--glass);backdrop-filter:blur(12px)}
+.back{border:0;background:transparent;font:inherit;font-size:22px;color:var(--ink);cursor:pointer;padding:0 8px;line-height:1;min-width:44px;min-height:44px}
+.chead .who{flex:1;min-width:0}
+.chead .who b{display:block;font-size:16px}
+.chead .who span{display:block;font-size:12.5px;color:var(--sec)}
+.marks{display:flex}
+.marks .idm{margin-left:-6px;box-shadow:0 0 0 2px var(--ground)}
+.thread{flex:1;overflow-y:auto;padding:14px 16px 120px;scrollbar-width:none}
+.thread::-webkit-scrollbar{display:none}
+.msg{display:flex;gap:9px;margin:10px 0;align-items:flex-start}
+.msg.me{justify-content:flex-end}
+.msg .bub{max-width:84%;padding:12px 15px;border-radius:18px;font-size:14.5px;line-height:1.45}
+.msg.me .bub{background:var(--ink);color:var(--ground);border-bottom-right-radius:6px}
+.msg.ai .bub{background:var(--paper);border-bottom-left-radius:6px}
+.msg.ai.wide{display:block}
+.msg.crit .bub{border-left:3px solid var(--ink);border-radius:6px 18px 18px 6px}
+.msg.crit .name::after{content:"review";font-size:12.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;border:1px solid var(--sec);border-radius:6px;padding:1px 5px;margin-left:6px;color:var(--sec)}
+.msg.ai.wide .bub{max-width:100%;border-radius:18px;border:1px solid var(--hair)}
+.msg.ai.wide .name{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);margin-bottom:6px}
+.msg .name{font-size:12.5px;font-weight:800;color:var(--sec);margin:0 0 4px}
+.sys{text-align:center;font-size:12.5px;color:var(--sec);margin:14px 20px;line-height:1.45}
+.sys a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;margin-top:4px;color:var(--ink);font-weight:700;text-decoration:none;border:1px solid var(--hair);border-radius:999px;background:var(--paper);cursor:pointer}
+.card{background:var(--paper);border-radius:18px;padding:14px 16px;margin:10px 0;font-size:13.5px;border:1px solid var(--hair)}
+.card h5{margin:0 0 8px;font-size:13px;font-weight:800;color:var(--ink);display:flex;justify-content:space-between;align-items:center}
+.card .kv{display:flex;gap:10px;padding:5px 0;border-top:1px solid var(--hair);font-size:13px}
+.card .kv:first-of-type{border-top:0}
+.card .kv .k{color:var(--sec);width:80px;flex:none;font-weight:700;font-size:12.5px}
+.card .kv .v{flex:1}
+.card .foot{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;min-height:44px;font-size:12.5px;font-weight:700;color:var(--sec);border:1px solid var(--hair);border-radius:999px;padding:0 12px;cursor:pointer}
+.layer{margin:10px 0 0;padding-top:10px;border-top:1px solid var(--hair)}
+.layer .lab{font-size:12.5px;font-weight:800;letter-spacing:.4px;color:var(--sec);text-transform:uppercase;margin-bottom:5px}
+.layer .lab.rec{color:var(--ink)}
+.layer p{margin:0 0 5px;font-size:13.5px;line-height:1.4}
+.composer{position:absolute;left:0;right:0;bottom:0;padding:10px 16px 22px;background:linear-gradient(to top,var(--ground) 75%,transparent)}
+.composer .box{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--hair);border-radius:999px;padding:8px 8px 8px 16px;font-size:14.5px;color:var(--mute)}
+.composer .box span{flex:1}
+.composer .box i{width:36px;height:36px;border-radius:50%;background:var(--ink);display:inline-flex;align-items:center;justify-content:center;color:var(--ground)}
+/* options */
+.opt{background:var(--paper);border-radius:18px;padding:14px 16px;margin:10px 0;border:1.5px solid var(--hair);cursor:pointer}
+.opt.rec{border-color:var(--hair)}
+.rec-lab{display:inline-block;font-size:12.5px;font-weight:800;color:var(--sec);border:1.5px dashed var(--sec);border-radius:8px;padding:3px 8px;text-transform:uppercase;letter-spacing:.3px}
+.opt .h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.opt .h b{font-size:16px}
+.opt .price{font-size:16px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.opt .price small{display:block;font-size:12.5px;color:var(--mute);font-weight:600}
+.opt .d{font-size:13.5px;color:var(--sec);margin-top:3px}
+.opt .why{font-size:13.5px;margin-top:8px;line-height:1.4}
+.opt .why b{font-weight:800}
+.risk{background:var(--amber-bg);border:1px solid var(--amber-line);color:var(--amber);border-radius:12px;padding:9px 12px;font-size:13px;font-weight:600;margin-top:10px;line-height:1.35}
+.night .risk{color:#F0C9A4}
+.coll{border:1px dashed var(--hair);border-radius:16px;padding:14px 16px;margin:10px 0;font-size:13.5px;color:var(--sec);cursor:pointer;min-height:48px}
+.coll b{color:var(--ink)}
+.coll .sub{margin-top:8px;padding-top:8px;border-top:1px solid var(--hair);display:none}
+.coll.open .sub{display:block}
+.coll .sub div{padding:5px 0}
+.decided{background:var(--paper);border-radius:16px;padding:14px 16px;margin:10px 0;font-size:14px;border-left:3px solid var(--ink);line-height:1.45}
+/* seal */
+.sealwrap{position:absolute;inset:0;background:rgba(14,20,24,.35);backdrop-filter:blur(6px);display:flex;align-items:flex-end}
+.seal{background:var(--paper);border-radius:28px 28px 0 0;width:100%;max-height:92%;overflow-y:auto;padding:12px 22px 28px;scrollbar-width:none}
+.seal::-webkit-scrollbar{display:none}
+.seal .grab{width:44px;height:5px;border-radius:3px;background:var(--hair);margin:0 auto 14px}
+.seal h2{font-size:24px;margin:10px 0 4px;line-height:1.15;letter-spacing:-.3px}
+.seal .sub{font-size:13.5px;color:var(--sec)}
+.seal .amt{font-size:34px;font-weight:800;letter-spacing:-.5px;margin:14px 0 2px;font-variant-numeric:tabular-nums}
+.seal .amt small{font-size:13px;font-weight:600;color:var(--sec);letter-spacing:0;margin-left:6px}
+.seal .roles{font-size:12.5px;color:var(--sec);line-height:1.45;margin:8px 0 6px}
+.seal .kv{display:flex;gap:12px;padding:9px 0;border-top:1px solid var(--hair);font-size:13.5px}
+.seal .kv .k{width:88px;flex:none;color:var(--sec);font-weight:700;font-size:12.5px;padding-top:2px}
+.seal .kv .v{flex:1;line-height:1.4}
+.seal .kv .v .was{color:var(--mute);text-decoration:line-through;margin-right:6px}
+.seal .kv.chg{background:var(--amber-bg);margin:0 -12px;padding:9px 12px;border-radius:10px}
+.seal .actions{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.seal .actions .two{display:flex;gap:8px}
+.seal .actions .two .btn{flex:1}
+.seal .foot{font-size:12.5px;color:var(--sec);text-align:center;margin-top:10px;font-family:var(--mono)}
+.auth{border:1.5px dashed var(--sec);border-radius:16px;padding:14px;text-align:center;font-size:13.5px;color:var(--sec);margin-top:12px}
+.auth b{display:block;color:var(--ink);font-size:14px;margin-bottom:4px}
+.void{position:sticky;top:-12px;z-index:2;margin:-12px -22px 12px;padding:16px 22px;background:var(--red);color:#fff;font-size:14px;font-weight:700;line-height:1.4}
+.void small{display:block;font-weight:600;opacity:.9;margin-top:4px;font-size:12.5px}
+.seal.isvoid .amt{text-decoration:line-through;color:var(--mute)}
+.seal.isvoid .kv,.seal.isvoid .risk,.seal.isvoid h2,.seal.isvoid .sub,.seal.isvoid .roles{opacity:.45}
+.newseal{background:var(--amber-bg);border:1.5px solid var(--amber-line);color:var(--amber);border-radius:14px;padding:12px 14px;font-size:13.5px;font-weight:700;margin:6px 0 10px;line-height:1.4}
+.night .newseal{color:#F0C9A4}
+/* outcome */
+.ohead{padding:6px 22px 0}
+.ohead h2{font-size:26px;margin:10px 0 4px;letter-spacing:-.3px;line-height:1.1}
+.ohead .sub{font-size:13.5px;color:var(--sec)}
+.tl{margin:14px 0 0}
+.tl .st{display:flex;gap:12px;padding:9px 0;position:relative}
+.tl .st .n{width:20px;flex:none;display:flex;flex-direction:column;align-items:center}
+.tl .st .n i{width:12px;height:12px;border-radius:50%;border:2px solid var(--hair);background:var(--paper);display:block;margin-top:4px}
+.tl .st.done .n i{background:var(--ink);border-color:var(--ink)}
+.tl .st.active .n i{border-color:var(--ink);background:var(--paper);box-shadow:0 0 0 3px var(--ground),0 0 0 4.5px var(--ink)}
+.tl .st .n::after{content:"";flex:1;width:2px;background:var(--hair);margin-top:4px}
+.tl .st:last-child .n::after{display:none}
+.tl .st .b{flex:1}
+.tl .st .b b{display:block;font-size:14.5px}
+.tl .st .b span{display:block;font-size:13px;color:var(--sec);margin-top:2px;line-height:1.4}
+.tl .st.future .b b{color:var(--mute);font-weight:600}
+.tl .st .b .sub{margin-top:6px;padding:8px 10px;background:var(--stone-bg);border-radius:10px;font-size:12.5px;color:var(--sec);line-height:1.45}
+.demo{display:flex;gap:6px;flex-wrap:wrap;margin:20px 0 0;padding-top:12px;border-top:1px dashed var(--hair)}
+.demo small{width:100%;font-size:12px;color:var(--sec);margin-bottom:2px}
+.demo button{border:1px dashed var(--sec);background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--sec);padding:0 10px;min-height:44px;border-radius:8px;cursor:pointer}
+.mono{font-family:var(--mono);font-size:12.5px}
+.evid{font-family:var(--mono);font-size:12.5px;color:var(--sec);line-height:1.7;margin-top:8px}
+.big{width:64px;height:64px;border-radius:50%;background:var(--green-bg);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:10px}
+.segs{display:flex;gap:6px;margin:8px 0 14px}
+.segs button{border:1px solid var(--hair);background:var(--paper);font:inherit;font-size:13.5px;font-weight:700;height:44px;padding:0 16px;border-radius:999px;cursor:pointer;color:var(--sec)}
+.segs button[aria-pressed=true]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.toast{position:absolute;left:16px;right:16px;bottom:120px;background:var(--ink);color:var(--ground);padding:12px 16px;border-radius:14px;font-size:13px;text-align:center;opacity:0;transform:translateY(8px);transition:.25s;pointer-events:none}
+.toast.on{opacity:1;transform:none}
+.two-col{display:flex;gap:8px;flex-wrap:wrap}
+.two-col .btn{flex:1 1 auto;min-width:0}
+.treas{background:var(--paper);border-radius:16px;border:1px solid var(--hair);padding:12px 14px;margin:10px 0;font-size:13.5px}
+.treas h5{margin:0 0 6px;font-size:12.5px;font-weight:800;display:flex;justify-content:space-between}
+.treas .kv{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-top:1px solid var(--hair)}
+.treas .kv span:last-child{font-variant-numeric:tabular-nums;font-weight:700}
+.treas .sig{font-size:12.5px;color:var(--sec);margin-top:8px}
+.rline{font-size:13px;color:var(--sec);margin:6px 0 0}
+.rline b{color:var(--ink)}
+@media (max-width:440px){.stage{padding:8px 0 20px}.phone{width:100vw;height:100svh;border-radius:0;padding:0}.screen{border-radius:0}.notes{display:none}.ctl{padding:0 10px}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="ctl">
+    <div class="brand">reAI <small>Prototype 003 r3 · CP-2 defect corrections (D-DS-01…04, 07, 08, 09) · frozen baseline · sample data</small></div>
+    <div class="grp">
+      <div class="seg" role="group" aria-label="Theme">
+        <button id="thD" aria-pressed="true" onclick="setTheme('day')">Day</button>
+        <button id="thN" aria-pressed="false" onclick="setTheme('night')">Night</button>
+      </div>
+    </div>
+    <div class="jump" aria-label="Jump to screen">
+      <button onclick="go('home')">Home</button><button onclick="go('wolf')">Wolf</button><button onclick="go('conc')">Concierge</button>
+      <button onclick="go('shared-pay')">Shared · payment</button><button onclick="go('shared-madrid')">Shared · Madrid</button>
+      <button onclick="go('decision')">Decision</button><button onclick="openSeal()">Seal</button><button onclick="go('outcome-madrid')">Outcome</button><button onclick="go('activity')">Activity</button>
+      <button onclick="resetAll()">Reset</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="phone"><div class="screen" id="screen"><div class="ambient"></div><div class="view" id="view"></div><div class="toast" id="toast"></div></div></div>
+    <aside class="notes">
+      <h3>What this prototype tests</h3>
+      <ul>
+        <li><b>Changed from Prototype 002:</b> FD-19 — the Activity hint teaches once, then disappears. FD-20 — after your decision, watch the Outcome move through <i>Preparing for approval</i> (Concierge orchestrating → Travel preparing → Treasury re-check → Seal ready) before "Review and approve" appears. Wolf critique visibly distinct in the discussion. UNKNOWN card without polling mechanics.</li>
+        <li><b>FD-10 dual entry:</b> two equal starts on Home, one slim row. Tap either — the keyboard opens inside that conversation. Continuing work resumes without re-choosing.</li>
+        <li><b>FD-03 Option A:</b> no bottom bar. Activity is one tap: the ring pill in the header, or the reassurance line.</li>
+        <li><b>FD-14 live progress:</b> the Madrid plan runs a demo clock (about 1 min ≈ 1.5 s). Watch the Home row: stage → progress → next step → honest ETA, including <span class="k">estimating time</span>, <span class="k">ETA unknown</span> and <span class="k">taking longer than estimated</span>. Open the Outcome for the deep timeline.</li>
+        <li><b>FD-08 / FD-10 paths:</b> Wolf conversation = Path 1 (Madrid). Concierge conversation = Path 2a fast path (visa rule), escalation, and Path 2 direct request (Al Noor payment) with Wolf's first global review and Treasury.</li>
+        <li><b>FD-06:</b> Decision surface keeps FACT · ANALYSIS · RECOMMENDATION · DECISION apart; dominated options collapsed with reasons; constraint violation named; one ranking marked Provisional.</li>
+        <li><b>FD-11 Treasury:</b> block shows the trigger (new beneficiary) and position; never a recommendation.</li>
+        <li><b>FD-07:</b> the Seal's authorization is a neutral placeholder — no method shown. Try <i>Simulate a price change</i> to see a Seal break and re-issue.</li>
+      </ul>
+      <p><b>Deliberately not shown:</b> Treasury-undetermined (FD-12), any Treasury persona or its absence (FD-13), any authentication method (FD-07), voice (FD-18 routing is a rule, not a screen here).</p>
+      <p style="color:#55636B">Demo controls inside the phone are dashed and labelled "demo"; they are not product UI.</p>
+    </aside>
+  </div>
+</div>
+
+<script>
+/* ================= state ================= */
+const S0 = () => ({
+  theme:'day', screen:'home', stack:[], expanded:false, seal:null, sealState:'open', collOpen:false, hint:true,
+  madrid:{ phase:'prep', stageIx:0, t:0, ready:false, decided:false, approved:false, exec:0, sub:'', prep:{ix:0,t:0,done:false} },
+  pay:{ decided:false },
+  actSeg:'live', chosen:null
+});
+let S = S0();
+const $ = s=>document.querySelector(s);
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),1800)}
+
+/* ---- FD-14 demo clock: stages of the Madrid plan ---- */
+/* each stage: label, next, kind: 'eta' (minutes), 'est' (estimating), 'unk' (unknown), duration in ticks (1 tick ≈ 1.5 s = 1 demo minute) */
+const STAGES=[
+  {label:'Experts working', next:'Mr. Wolf review', kind:'eta', eta:7, over:3},
+  {label:'Mr. Wolf reviewing', next:'Re-orchestration', kind:'est', estFor:3, eta:5},
+  {label:'Re-orchestration', next:'Treasury check', kind:'unk', dep:'Legal Expert', dur:7},
+  {label:'Treasury checking', next:'Ready to discuss', kind:'eta', eta:2},
+];
+function stageText(){
+  const m=S.madrid, st=STAGES[m.stageIx];
+  if(m.ready) return {stage:'Ready to discuss', next:'', eta:''};
+  if(st.kind==='eta'){
+    const left=st.eta-m.t;
+    if(left>0) return {stage:st.label, next:'Next: '+st.next, eta:'~'+left+' min'};
+    return {stage:st.label, next:'Taking longer than estimated', eta:'re-estimating'};
+  }
+  if(st.kind==='est'){
+    if(m.t<st.estFor) return {stage:st.label, next:'Next: '+st.next, eta:'estimating time'};
+    const left=st.eta-(m.t-st.estFor); return {stage:st.label, next:'Next: '+st.next, eta:'~'+Math.max(left,1)+' min'};
+  }
+  return {stage:st.label+' · waiting for '+st.dep, next:'Next: '+st.next, eta:'ETA unknown'};
+}
+function progress(){const m=S.madrid; if(m.ready) return 100; const st=STAGES[m.stageIx]; const tot=st.kind==='eta'?st.eta+(st.over||0):st.kind==='est'?st.estFor+st.eta:st.dur; return Math.min(99, Math.round((m.stageIx/STAGES.length)*100 + (Math.min(m.t,tot)/tot)*(100/STAGES.length)))}
+const PREP=[{label:'Concierge orchestrating preparation',next:'Travel preparing the booking',eta:2},{label:'Travel preparing the exact booking',next:'Treasury re-check',eta:3},{label:'Treasury re-checking',next:'Seal ready',eta:2}];
+function prepText(){const q=S.madrid.prep; if(q.done) return {stage:'Seal ready',next:'Waiting for your authorization',eta:''}; const st=PREP[q.ix]; const left=st.eta-q.t; return {stage:st.label,next:'Next: '+st.next,eta:left>0?'~'+left+' min':'re-estimating'}}
+function prepProgress(){const q=S.madrid.prep; if(q.done) return 100; const tot=PREP.reduce((a,b)=>a+b.eta,0); const done=PREP.slice(0,q.ix).reduce((a,b)=>a+b.eta,0)+Math.min(q.t,PREP[q.ix].eta); return Math.round(done/tot*100)}
+function tickPrep(){const m=S.madrid; if(!m.decided||m.approved||m.prep.done) return; const q=m.prep; q.t++; if(q.t>PREP[q.ix].eta){q.ix++;q.t=0; if(q.ix>=PREP.length){q.done=true; render(); toast('Seal ready · your authorization is needed'); return;}} const x=prepText(),p=prepProgress(); document.querySelectorAll('[data-prep=stage]').forEach(e=>e.textContent=x.stage); document.querySelectorAll('[data-prep=next]').forEach(e=>e.textContent=x.next); document.querySelectorAll('[data-prep=eta]').forEach(e=>e.textContent=x.eta); document.querySelectorAll('[data-prep=bar]').forEach(e=>e.style.width=p+'%');}
+setInterval(tickPrep,1500);
+function prepBlock(){const x=prepText();return `<div class="paper live" style="margin:10px 0" onclick="go('outcome-madrid')"><div class="h"><b>Preparing for approval</b><span class="pill p-blue">Working</span></div><div class="stage" data-prep="stage">${x.stage}</div><div class="bar"><i data-prep="bar" style="width:${prepProgress()}%"></i></div><div class="next"><b data-prep="next">${x.next}</b><span class="eta" data-prep="eta">${x.eta}</span></div><div class="rline" style="margin-top:8px">The Master Concierge prepares the exact booking you decided. Nothing is sent until you authorize.</div></div>`}
+function tick(){
+  const m=S.madrid; if(m.phase!=='prep'||m.ready) return;
+  const st=STAGES[m.stageIx]; m.t++;
+  const tot=st.kind==='eta'?st.eta+(st.over||0):st.kind==='est'?st.estFor+st.eta:st.dur;
+  if(m.t>tot){ m.stageIx++; m.t=0; if(m.stageIx>=STAGES.length){ m.ready=true; m.phase='ready'; render(); toast('Madrid plan is ready to discuss'); return; } }
+  liveUpdate();
+}
+setInterval(tick,1500);
+function liveUpdate(){
+  const x=stageText(), p=progress();
+  document.querySelectorAll('[data-live=stage]').forEach(e=>e.textContent=x.stage);
+  document.querySelectorAll('[data-live=next]').forEach(e=>e.textContent=x.next);
+  document.querySelectorAll('[data-live=eta]').forEach(e=>e.textContent=x.eta);
+  document.querySelectorAll('[data-live=bar]').forEach(e=>e.style.width=p+'%');
+}
+
+/* ================= navigation ================= */
+function setTheme(t){S.theme=t;$('#thD').setAttribute('aria-pressed',t==='day');$('#thN').setAttribute('aria-pressed',t==='night');render()}
+function go(s){ if(s==='activity') S.hint=false; if(S.screen!==s){S.stack.push(S.screen);S.screen=s;} S.seal=null; render(); }
+function back(){ S.seal=null; S.screen=S.stack.pop()||'home'; render(); }
+function resetAll(){S=S0();$('#thD').setAttribute('aria-pressed',true);$('#thN').setAttribute('aria-pressed',false);render()}
+function openSeal(k){S.seal=k||'ek141';S.sealState='open';render()}
+function closeSeal(){S.seal=null;render()}
+
+/* ================= pieces ================= */
+const IDM={wolf:'<i class="idm wolf"></i>',conc:'<i class="idm conc"></i>',gabi:'<i class="idm gabi">G</i>'};
+const night=()=>S.theme==='night';
+function canon(){const m=S.madrid,items=[];
+  items.push({id:'manoj',needs:true,term:false});
+  items.push({id:'alnoor',ready:!S.pay.decided,term:false});
+  if(m.phase==='exec'&&m.exec>=4) items.push({id:'madrid',term:true}); else items.push({id:'madrid',ready:m.ready&&!m.decided,needs:m.decided&&m.prep.done&&!m.approved,term:false});
+  items.push({id:'seat7k',term:false},{id:'notes',term:false},{id:'car',term:false},{id:'vat',term:false});
+  const live=items.filter(i=>!i.term);return{needs:live.filter(i=>i.needs).length,ready:live.filter(i=>i.ready).length,moving:live.length,handled:live.filter(i=>!i.needs&&!i.ready).length}}
+function topBar(){const c=canon();const cnt=night()?'quiet':`${c.moving} moving`;return `<div class="top"><div class="mark"><span class="dot"></span>reAI</div><div style="display:flex;gap:8px;align-items:center">
+  <button class="ring" onclick="S.hint=false;go('activity')" aria-label="Activity"><i></i>Activity <span class="cnt">· ${cnt}</span>${S.hint&&S.screen==='home'&&!night()?'<span class="hint">Everything reAI is doing lives here</span>':''}</button>
+  <div class="avatar" onclick="toast('You · preferences, quiet hours, Vault')">G</div></div></div>`}
+function dock(){return `<div class="dock"><div class="entry">
+  <button onclick="go('wolf')"><i class="idm sm wolf"></i>Plan with Wolf</button>
+  <button onclick="go('conc')"><i class="idm sm conc"></i>Ask the Concierge</button>
+  <button class="mic" aria-label="Voice" onclick="toast('Voice: say a name to route. From Home, an unclear request gets one spoken question: Wolf or Concierge?')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+</div></div>`}
+function tabbar(cur){return '';return `<div class="tabbar"><button aria-current="${cur==='home'?'page':'false'}" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z"/></svg>Today</button><button aria-current="${cur==='activity'?'page':'false'}" onclick="go('activity')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Activity</button></div>`}
+function liveRow(){const x=stageText();return `<div class="paper live" onclick="go('outcome-madrid')"><div class="h"><b>Madrid trip · 1–4 Oct</b><span class="pill p-blue">Working</span></div>
+  <div class="stage" data-live="stage">${x.stage}</div><div class="bar"><i data-live="bar" style="width:${progress()}%"></i></div>
+  <div class="next"><b data-live="next">${x.next}</b><span class="eta" data-live="eta">${x.eta}</span></div></div>`}
+
+/* ================= HOME ================= */
+function home(){
+  const n=night(); const ready=S.madrid.ready;
+  const greet=n?'Good evening, Gabriele.':'Good morning, Gabriele.';
+  const c=canon(); const sit = n ? 'Nothing needs you tonight.' : `${c.needs} thing${c.needs===1?'':'s'} need${c.needs===1?'s':''} you.${c.ready?` ${c.ready} plan${c.ready===1?' is':'s are'} ready to discuss.`:''}`;
+  const sit2 = n ? 'Everything else is moving.' : 'Everything else is moving · 1 outcome being confirmed.';
+  let rows='';
+  if(!n){
+    rows+=`<div class="row halo" onclick="toast('Reply drafted · nothing sent until you approve')"><span class="pill p-amber">Action required</span><div class="t"><b>Manoj · V1 architecture sign-off</b><span>Reply drafted · reply today</span></div><span class="chev">›</span></div>`;
+    rows+=`<div class="row" onclick="go('shared-pay')"><span class="pill p-ready">Ready to discuss</span><div class="t"><b>Al Noor payment · AED 18,400</b><span>Reviewed by Mr. Wolf · Treasury checked</span></div><span class="chev">›</span></div>`;
+    if(ready&&!S.madrid.decided) rows+=`<div class="row" data-ready="1" onclick="go('shared-madrid')"><span class="pill p-ready">Ready to discuss</span><div class="t"><b>Madrid plan · flights and hotel</b><span>2 review passes · Treasury checked</span></div><span class="chev">›</span></div>`;
+    if(S.madrid.decided&&!S.madrid.approved) rows+= S.madrid.prep.done ? `<div class="row halo" data-ready="1" onclick="openSeal('ek141')"><span class="pill p-amber">Action required</span><div class="t"><b>Book EK141 · AED 9,870</b><span>Seal ready · fare quote valid until 18:00</span></div><span class="chev">›</span></div>` : `<div class="row" data-ready="1" onclick="go('outcome-madrid')"><span class="pill p-blue">Working</span><div class="t"><b>EK141 · preparing for approval</b><span data-prep="stage">${prepText().stage}</span></div><span class="chev">›</span></div>`;
+  } else {
+    rows+=`<div class="row" onclick="go('outcome-madrid')"><span class="pill p-green">Done</span><div class="t"><b>Hotel Urso · 1–4 Oct verified</b><span>Confirmed with the provider at 21:40</span></div><span class="chev">›</span></div>`;
+  }
+  const live = (!n && !ready) ? `<div class="sec"><h4>In preparation</h4>${liveRow()}</div>` : '';
+  const reassure = n ? `<div class="reassure"><b>Quiet hours from 23:00</b> · only safety, security and travel disruption will reach you</div>`
+    : `<div class="reassure" onclick="go('activity')"><span><b>reAI is handling ${canon().handled}</b> · nothing committed without you ›</span></div>`;
+  const showme = n?'' : `<div class="showme"><button class="btn b-ink sm" onclick="S.expanded=!S.expanded;render()">${S.expanded?'Less':'Show me'}</button><span style="font-size:12.5px;color:var(--sec)">${S.expanded?'Morning state of Home':'What changed, what\u2019s moving, what\u2019s coming'}</span></div>`;
+  const l1 = (S.expanded && !n) ? `
+    <div class="sec"><h4>What changed since you last looked</h4><div class="paper list">
+      <div class="li"><span class="k">Money</span><span class="v">Al Noor invoice: bank details arrived by email — <span class="flag">Unverified</span></span></div>
+      <div class="li"><span class="k">Travel</span><span class="v">EK141 fare re-checked 07:38 · unchanged</span></div></div></div>
+    <div class="sec"><h4>Moving</h4><div class="paper list">
+      <div class="li"><span class="k">Today</span><span class="v">09:30 Manoj · architecture review<br>16:00 Investor call · notes ready by 15:00<br>19:30 Dinner with Karina · <span class="ok">✓ verified</span></span></div>
+      <div class="li"><span class="k">Money</span><span class="v">Visa ending 4417 · statement due Thursday · AED 12,300</span></div>
+      <div class="li"><span class="k">Travel</span><span class="v">Madrid 1–4 Oct · Hotel Urso <span class="ok">✓ verified</span></span></div>
+      <div class="li"><span class="k">Family</span><span class="v">Nothing clashes with the Madrid trip</span></div>
+      <div class="li"><span class="k">Work</span><span class="v">reAI V1 · reconciliation ready · review 09:30</span></div></div></div>
+    <div class="sec"><h4>Upcoming</h4><div class="paper list">
+      <div class="li"><span class="k">Wed</span><span class="v">EK141 fare quote valid until 18:00 · reAI re-checks it then</span></div>
+      <div class="li"><span class="k">Thu</span><span class="v">Visa statement due · AED 12,300</span></div></div></div>
+    <div class="sec"><h4>Deliberately not here · reAI is handling these</h4><div class="paper list">
+      <div class="li"><span class="pill p-indigo">Unknown</span><span class="v">Seat 7K on EK141 · Emirates didn\u2019t confirm · nothing for you before 13:00</span></div>
+      <div class="li"><span class="pill p-stone">Waiting</span><span class="v">Garage · reply promised by 12:00 · inbox checked 12:15</span></div></div></div>
+    <div class="sec"><h4>Since you last looked</h4><div class="paper list">
+      <div class="li"><span class="ok">✓</span><span class="v">Hotel Urso verified with the provider · 07:12</span></div>
+      <div class="li"><span class="ok">✓</span><span class="v">6 receipts filed to the Vault · internal, no approval needed</span></div></div></div>
+    <div class="sec"><h4>Worth knowing now</h4><div class="paper list"><div class="li"><span class="v">Madrid hotel will charge in EUR · no conversion by the merchant</span></div></div></div>` : '';
+  return `${topBar()}<div class="scroll">
+    <div class="greet">${greet}</div><div class="sit">${sit}</div><div class="sit2">${sit2}</div>
+    <div class="paper">${rows}</div>${live}${reassure}${showme}${l1}</div>${dock()}${tabbar('home')}`;
+}
+
+/* ================= CONVERSATIONS ================= */
+function chead(title, sub, marks, extra){return `<div class="chead"><button class="back" onclick="back()">‹</button><div class="marks">${marks}</div><div class="who"><b>${title}</b><span>${sub}</span></div>${extra||''}</div>`}
+function msg(who,html,name,wide){if(wide==='crit')return `<div class="msg ai crit">${IDM[who]}<div><div class="name">${name}</div><div class="bub">${html}</div></div></div>`;if(wide)return `<div class="msg ai wide"><div class="name">${IDM[who]}${name}</div><div class="bub">${html}</div></div>`;return `<div class="msg ${who==='me'?'me':'ai'}">${who==='me'?'':IDM[who]}<div><div class="name">${who==='me'?'':name}</div><div class="bub">${html}</div></div></div>`}
+function composer(ph){return `<div class="composer"><div class="box"><span>${ph}</span><i><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></i></div></div>`}
+
+function wolf(){
+  const x=stageText(); const ready=S.madrid.ready;
+  return chead('Mr. Wolf','Plans with you · friend and operational partner',IDM.wolf)+`<div class="thread">
+  ${msg('me','Madrid Thursday to Sunday. Meeting Thursday 16:00 in Salamanca. Let\u2019s plan it.')}
+  ${msg('wolf','Two things drive this: you must land before 16:00, and Sunday is Karina\u2019s dinner at 19:30 in Dubai. Direct out, flexible back?','Mr. Wolf')}
+  ${msg('me','Yes. Direct. Keep it under 12k all in.')}
+  <div class="card"><h5>Plan · Madrid trip <span class="chip">you + Wolf</span></h5>
+    <div class="kv"><span class="k">Dates</span><span class="v">Thu 1 – Sun 4 Oct · you said</span></div>
+    <div class="kv"><span class="k">Must</span><span class="v">Land before 16:00 Thu · back for 19:30 Sun</span></div>
+    <div class="kv"><span class="k">Prefer</span><span class="v">Direct · aisle · left arm free · you told me</span></div>
+    <div class="kv"><span class="k">Budget</span><span class="v">Under AED 12,000 all in</span></div></div>
+  ${msg('wolf','Good. I\u2019m sending this to the Master Concierge as one request: flights, a hotel near Salamanca, and the seat. I\u2019ll review what comes back before you see it.','Mr. Wolf')}
+  <div class="card"><h5>Request to Master Concierge <span class="chip">sent 07:41</span></h5>
+    <p style="margin:0;font-size:13.5px;line-height:1.45">Madrid 1–4 Oct for Gabriele. Direct DXB–MAD landing before 16:00 Thu; return landing DXB before 18:00 Sun. Hotel walkable to Salamanca, refundable. Aisle seat. Total under AED 12,000. Flag anything that touches the Al Noor payment or the Thursday statement.</p></div>
+  ${ready ? `<div class="paper live" data-ready="1" style="margin:10px 0" onclick="go('shared-madrid')"><div class="h"><b>Madrid trip</b><span class="pill p-ready">Ready to discuss</span></div><div class="stage">Reviewed by Mr. Wolf · 2 passes · Treasury checked</div></div>
+     ${msg('wolf','It\u2019s ready. I pushed back once — the first pass had no Wednesday option and had forgotten the aisle seat. Join the discussion and we\u2019ll decide together.','Mr. Wolf')}
+     <div class="sys"><a onclick="go('shared-madrid')">Open the discussion · Gabi + Wolf + Master Concierge ›</a></div>`
+   : `<div class="paper live" style="margin:10px 0" onclick="go('outcome-madrid')"><div class="h"><b>Madrid trip</b><span class="pill p-blue">Working</span></div>
+    <div class="stage" data-live="stage">${x.stage}</div><div class="bar"><i data-live="bar" style="width:${progress()}%"></i></div>
+    <div class="next"><b data-live="next">${x.next}</b><span class="eta" data-live="eta">${x.eta}</span></div></div>`}
+  </div>${composer('Message Wolf')}`;
+}
+
+function conc(){
+  return chead('Master Concierge','Answers and coordinates · head of the concierge system',IDM.conc)+`<div class="thread">
+  ${msg('me','What\u2019s the visa rule for Spain with an Italian passport and UAE residence?')}
+  ${msg('conc','No visa. As an EU citizen you enter Spain freely for any length of stay; your UAE residence doesn\u2019t change that. Bring the passport itself — an ID card is also accepted, but the airline may ask for the passport on the Dubai side.<div class="foot"><span class="chip">Fact · Legal Expert</span><span class="chip">Answered directly</span></div>','Master Concierge')}
+  ${msg('me','Given that, what should I do about the Madrid dates?')}
+  <div class="sys">That\u2019s a planning question — Mr. Wolf is looking at it against your Madrid plan.<br><a onclick="go('wolf')">Continue with Wolf ›</a></div>
+  ${msg('me','Pay Al Noor Interiors AED 18,400 for the villa fit-out invoice.')}
+  ${msg('conc','Understood. I\u2019m preparing it. Because Al Noor is a new beneficiary, Treasury will check it, and Mr. Wolf reviews it against your commitments before you decide.','Master Concierge')}
+  <div class="card"><h5>Al Noor payment <span class="pill p-ready">Ready to discuss</span></h5>
+    <div class="tl" style="margin-top:4px">
+      <div class="st done"><div class="n"><i></i></div><div class="b"><b>Experts working</b><span>Finance · Legal · 07:44 – 07:52</span></div></div>
+      <div class="st done"><div class="n"><i></i></div><div class="b"><b>Mr. Wolf first global review</b><span>Checked against the Madrid trip, Thursday\u2019s statement and your commitments · asked to verify the beneficiary and to look at retention</span></div></div>
+      <div class="st done"><div class="n"><i></i></div><div class="b"><b>Re-orchestration · pass 2</b><span>Legal added the retention clause · Finance confirmed milestone 2</span></div></div>
+      <div class="st done"><div class="n"><i></i></div><div class="b"><b>Treasury checked</b><span>Triggered: new beneficiary · covered</span></div></div>
+      <div class="st active"><div class="n"><i></i></div><div class="b"><b>Ready to discuss</b><span>Shared conversation opened · 07:58</span></div></div>
+    </div>
+    <div class="foot"><button class="btn b-ink sm" onclick="go('shared-pay')">Open the discussion</button></div></div>
+  </div>${composer('Ask the Master Concierge')}`;
+}
+
+function sharedPay(){
+  const marks=IDM.gabi+IDM.wolf+IDM.conc;
+  return chead('Al Noor payment','Working room · you · Wolf · Concierge',marks)+`<div class="thread">
+  <div class="sys">Opened from your Concierge conversation</div>
+  ${msg('conc',`Here is the refined result.
+    <div class="layer"><div class="lab">Fact</div><p>Invoice #0912 · AED 18,400 · due 30 Sep. <span class="ok">✓ matches contract milestone 2</span></p><p>Bank details came from an emailed PDF · <span class="flag">Unverified</span></p></div>
+    <div class="layer"><div class="lab">Analysis</div><p><b>Finance:</b> amount and milestone are consistent with the signed contract.</p><p><b>Legal:</b> clause 9 allows a 5% retention until snagging is signed off.</p></div>
+    <div class="layer"><div class="lab rec">Recommendation · Master Concierge · reviewed by Mr. Wolf</div><p>Verify the bank details by phone with Al Noor, then pay AED 17,480 (5% retained) rather than the full amount.</p></div>
+    <div class="foot"><a class="chip" onclick="toast('Review record: pass 1 → Wolf: verify beneficiary, consider retention → pass 2: Legal added clause 9')">Reviewed by Mr. Wolf · 2 passes ›</a></div>`,'Master Concierge · with Finance, Legal',true)}
+  <div class="treas"><h5>Treasury <span class="ok">Covered</span></h5>
+    <div class="kv"><span>Triggered by</span><span>New beneficiary</span></div>
+    <div class="kv"><span>Available now</span><span>AED 96,200</span></div>
+    <div class="kv"><span>Committed · next 30 days</span><span>AED 41,300</span></div>
+    <div class="kv"><span>After this payment</span><span>AED 36,500 free</span></div>
+    <div class="kv"><span>All known commitments met</span><span>Through 31 Oct</span></div>
+    <div class="sig">Treasury · checked 07:57 · states position and consequence only</div></div>
+  ${msg('wolf','My concern is the bank details — an emailed PDF is exactly how invoices get hijacked. I\u2019d call them before anything moves. The retention is your call; it\u2019s within the contract.','Mr. Wolf','crit')}
+  ${msg('me','Agree. Call first. Then pay with retention.')}
+  ${S.pay.decided ? `<div class="decided"><b>You decided · 08:02</b><br>Verify by phone, then pay AED 17,480 with 5% retention.<div class="rline">Nothing moves until the details are verified. <b>Status: Waiting on Al Noor.</b></div></div>` :
+  `<div class="card"><h5>Your decision</h5><div class="two-col"><button class="btn b-ink sm" onclick="S.pay.decided=true;render()">Verify, then pay (5% retained)</button><button class="btn b-out sm" onclick="toast('Modify returns to planning; a new result follows')">Modify</button></div></div>`}
+  </div>${composer('Message the group')}`;
+}
+
+function sharedMadrid(){
+  const marks=IDM.gabi+IDM.wolf+IDM.conc;
+  return chead('Madrid trip','Working room · you · Wolf · Concierge',marks)+`<div class="thread">
+  <div class="sys">Opened from your Wolf conversation</div>
+  ${msg('conc',`Two options are genuinely different for Thursday; three others are worse on every count you set, so they\u2019re folded below the options.
+    <div class="layer"><div class="lab">Fact</div><p>EK141 07:40 → 13:05 · direct · AED 9,870 · <span class="ok">✓ price checked 07:38</span></p><p>Iberia via Doha 09:10 → 17:20 · AED 6,420 · fare 3 h old</p><p>Hotel Urso 1–4 Oct · <span class="ok">✓ verified</span></p></div>
+    <div class="layer"><div class="lab">Analysis</div><p><b>Travel:</b> EK141 is the only direct flight that lands before your 16:00.</p><p><b>Legal:</b> no visa needed.</p></div>
+    <div class="layer"><div class="lab rec">Recommendation · Master Concierge · reviewed by Mr. Wolf · Provisional</div><p>EK141 Thursday. Provisional only because the Iberia fare hasn\u2019t been re-checked in 3 hours.</p></div>
+    <div class="foot"><a class="chip" onclick="toast('Pass 1 had no Wednesday option and forgot the aisle seat; Wolf reopened it. Pass 2 added both.')">Reviewed by Mr. Wolf · 2 passes ›</a></div>`,'Master Concierge · with Travel, Legal',true)}
+  <div class="treas"><h5>Treasury <span class="ok">Covered</span></h5><div class="kv"><span>Triggered by</span><span>Amount threshold</span></div><div class="kv"><span>After this trip</span><span>AED 26,600 free</span></div><div class="kv"><span>All known commitments met</span><span>Through 31 Oct</span></div><div class="sig">Treasury · checked 08:06</div></div>
+  ${msg('wolf','One thing they did add after my nudge: Wednesday on the same flight is AED 2,100 less. It\u2019s a day earlier than you asked, so I\u2019m not recommending it — just making sure you see it.','Mr. Wolf','crit')}
+  ${S.madrid.decided ? `<div class="decided"><b>Your decision · 08:09</b><br>EK141 · Thursday 1 Oct.${S.madrid.approved?'<div class="rline"><b>Authorized.</b> Booking in progress — see the Outcome.</div>':S.madrid.prep.done?`<div class="rline">Seal ready · prepared under the Master Concierge · Treasury re-checked 08:14</div><div class="foot" style="margin-top:8px"><button class="btn b-ink sm" onclick="openSeal('ek141')">Review and approve</button></div>`:''}</div>${(!S.madrid.approved&&!S.madrid.prep.done)?prepBlock():''}`
+   : `<div class="foot" style="margin:6px 0"><button class="btn b-ink sm" onclick="go('decision')">Compare and decide</button></div>`}
+  </div>${composer('Message the group')}`;
+}
+
+/* ================= DECISION ================= */
+function decision(){
+  return chead('Decide · Thursday flight','Madrid trip · your decision',IDM.gabi+IDM.wolf+IDM.conc)+`<div class="thread">
+  <div class="sys">Facts are checked. The recommendation is the Concierge\u2019s, reviewed by Wolf. Nothing is chosen until you choose.</div>
+  <div class="opt rec" onclick="choose('EK141')"><span class="rec-lab">Recommendation · provisional</span><div class="h" style="margin-top:8px"><div><b>Emirates EK141 · 07:40 → 13:05</b><div class="d">Direct · Business · flexible</div></div><div class="price">AED 9,870<small><span class="ok">✓ checked 07:38</span></small></div></div>
+    <div class="why"><b>Why:</b> the only direct flight that lands before your 16:00. Provisional because the Iberia fare is 3 h old.</div></div>
+  <div class="opt" onclick="choose('IB')"><div class="h"><div><b>Iberia via Doha · 09:10 → 17:20</b><div class="d">1 stop · Business · non-refundable</div></div><div class="price">AED 6,420<small>fare 3 h old</small></div></div>
+    <div class="risk">Breaks your constraint: direct flights. Lands after your 16:00 meeting.</div></div>
+  <div class="coll ${S.collOpen?'open':''}" onclick="S.collOpen=!S.collOpen;render()"><b>3 more options</b> · worse on every count you set ›
+    <div class="sub"><div><b>Wed 30 Sep · EK141</b> · AED 7,770 · a day earlier than you asked — not dominated, shown here because Wolf asked for it</div><div><b>Qatar via Doha 02:10</b> · AED 7,100 · overnight, lands 14:50, 1 stop · breaks direct</div><div><b>Air France via Paris</b> · fare check <span class="pill p-red">Failed</span> provider timed out · safe to re-run</div></div></div>
+  ${S.madrid.decided?`<div class="decided"><b>Your decision · EK141 · Thursday 1 Oct · 08:09</b><div class="rline">Recorded. The booking is consequential: it is prepared, then comes to you for authorization.</div></div>${S.madrid.prep.done?`<div class="decided"><b>Seal ready</b><div class="rline">Prepared under the Master Concierge with Travel · Treasury re-checked 08:14</div><div class="foot" style="margin-top:8px"><button class="btn b-ink sm" onclick="openSeal('ek141')">Review and approve</button><button class="btn b-out sm" onclick="go('shared-madrid')">Back to the discussion</button></div></div>`:prepBlock()}`:''}
+  </div>`;
+}
+function choose(o){ if(o==='IB'){toast('This option breaks a constraint you set — choose it only knowingly'); } S.madrid.decided=true; S.chosen=o; S.madrid.prep={ix:0,t:0,done:false}; render(); }
+
+/* ================= SEAL ================= */
+function seal(){
+  const broken=S.sealState==='broken', reissued=S.sealState==='reissued', auth=S.sealState==='auth', approved=S.sealState==='approved';
+  const price = reissued?'AED 10,140':'AED 9,870';
+  return `<div class="sealwrap" onclick="if(event.target===this)closeSeal()"><div class="seal ${broken?'isvoid':''}"><div class="grab"></div>
+    ${broken?`<div class="void">This Seal is void — the fare changed while it was open.<small>Nothing was booked. Your previous approval no longer applies. A new Seal is ready.</small></div>`:''}
+    ${reissued?`<div class="newseal">New Seal · replaces A7F3·C21E<br>What changed: fare <span style="text-decoration:line-through;opacity:.7">AED 9,870</span> → <b>AED 10,140</b> · difference vs cheapest option <span style="text-decoration:line-through;opacity:.7">AED 3,450</span> → <b>AED 3,720</b> · Treasury re-checked 08:17: free after this <span style="text-decoration:line-through;opacity:.7">AED 26,600</span> → <b>AED 26,330</b>. Flight, date, seat, counterparty, refund rule and data shared are unchanged.</div>`:''}
+    <div style="display:flex;justify-content:space-between;align-items:center"><span class="pill p-amber">Action required · step 1 of 2</span><span style="font-size:12.5px;color:var(--mute)">Approve 1 action</span></div>
+    <h2>Book 1 Business seat on EK141 for Gabriele and pay the fare. Nothing else.</h2>
+    <div class="sub">Thu 1 Oct · DXB 07:40 → MAD 13:05 · direct · 8h25</div>
+    <div class="roles">Planned with Mr. Wolf · reviewed by Mr. Wolf · you decided 08:09 · prepared under the Master Concierge with Travel · Treasury re-checked ${reissued?'08:17':'08:14'}</div>
+    <div class="amt">${price}<small>incl. taxes and fees</small></div>
+    <div style="font-size:13px;color:var(--sec)">Visa ending 4417 · charged in AED · no FX fee · ${reissued?'<span class="ok">✓ re-checked now</span>':'<span class="ok">✓ checked 07:38 · re-checked now</span>'}</div>
+    <div style="margin-top:12px">
+      <div class="kv ${reissued?'chg':''}"><span class="k">Treasury</span><span class="v">${reissued?'Covered · re-checked 08:17 · <span class="was">AED 26,600</span><b>AED 26,330</b> free after this · all known commitments met through 31 Oct':'Covered · checked 08:14 · AED 26,600 free after this · all known commitments met through 31 Oct'}</span></div>
+      <div class="kv ${reissued?'chg':''}"><span class="k">Why</span><span class="v">The only direct flight on your date. Lands 3 h before 16:00. ${reissued?'<span class="was">AED 3,450</span><b>AED 3,720</b>':'AED 3,450'} more than the cheapest option, which breaks your direct-only constraint.</span></div>
+      <div class="kv"><span class="k">Who</span><span class="v">Emirates · booked through Duffel</span></div>
+      <div class="kv"><span class="k">Undo?</span><span class="v">Free date change · refund minus AED 300 until 24 h before departure.</span></div>
+      <div class="kv ${reissued?'chg':''}"><span class="k">What changed</span><span class="v">${reissued?'Fare <span class="was">AED 9,870</span><b>AED 10,140</b> · difference vs cheapest <span class="was">AED 3,450</span><b>AED 3,720</b> · Treasury re-checked 08:17, free after this <span class="was">AED 26,600</span><b>AED 26,330</b> · payload A7F3·C21E → B1D0·77A2. Unchanged: flight, date, class, seat, counterparty, refund rule, data shared.':'Nothing changed since you decided at 08:09.'}</span></div>
+      <div class="kv"><span class="k">Data shared</span><span class="v">Passenger name, passport on file, contact email. Nothing else leaves the Vault.</span></div>
+    </div>
+    <div class="risk">Seat 7K could not be confirmed with Emirates. The booking goes ahead without a guaranteed seat.</div>
+    <div class="kv" style="border-top:0;padding-top:12px"><span class="k">After you approve</span><span class="v">1 · every fact above is re-checked · 2 · the booking is sent once · 3 · UNKNOWN until Emirates confirms, then DONE with the ticket number. The Concierge prepared this; only your authorization sends it.</span></div>
+
+    ${auth?`<div class="auth"><b>Authorization happens here</b>Method to be defined in the Privacy / Security phase. Approval is authenticated and visual; voice cannot approve.<div class="foot" style="margin-top:10px;display:flex;gap:8px;justify-content:center"><button class="btn b-ink sm" onclick="approve()">Continue (demo)</button><button class="btn b-out sm" onclick="S.sealState=S.sealState==='auth'?'open':'open';render()">Cancel</button></div></div>`:''}
+    ${approved?`<div class="decided"><b>Approved · 08:12</b><br>Sending once. Not done until verified.<div class="foot" style="margin-top:8px"><button class="btn b-ink sm" onclick="closeSeal();go('outcome-madrid')">Follow it in the Outcome</button></div></div>`:''}
+    ${(!auth&&!approved)?`<div class="actions">
+      <button class="btn b-ink w" ${broken?'disabled':''} onclick="S.sealState='auth';render()">Approve ${price}</button>
+      <div class="two"><button class="btn b-out" onclick="toast('Modify returns to the discussion; a new Seal follows')">Modify</button><button class="btn b-red" onclick="toast('Rejected · nothing booked · nothing held');closeSeal()">Reject</button></div>
+      ${broken?`<button class="btn b-ink w" onclick="S.sealState='reissued';render()">Open the new Seal</button>`:''}
+    </div>`:''}
+    <div class="foot">Voice and chat can\u2019t approve · payload A7F3·C21E${reissued?' → B1D0·77A2':''}</div>
+    ${(!auth&&!approved&&!broken)?`<div class="demo"><small>Demo control · not product UI</small><button onclick="S.sealState='broken';render()">Simulate a price change</button></div>`:''}
+  </div></div>`;
+}
+function approve(){S.madrid.approved=true;S.madrid.prep.done=true;S.madrid.phase='exec';S.madrid.exec=1;S.sealState='approved';render()}
+
+/* ================= OUTCOME ================= */
+function outcomeMadrid(){
+  const m=S.madrid, x=stageText();
+  let pill, sub, body='';
+  if(m.phase==='prep'){pill='<span class="pill p-blue">Working</span>';sub='Being prepared · nothing committed';}
+  else if(m.phase==='ready'&&m.decided){pill=m.prep.done?'<span class="pill p-amber">Action required</span>':'<span class="pill p-blue">Working</span>';sub=m.prep.done?'Seal ready · nothing is sent until you authorize':'Preparing for approval · nothing committed';}
+  else if(m.phase==='ready'){pill='<span class="pill p-blue">Working</span> <span class="pill p-ready">Ready to discuss</span>';sub='Nothing committed · join the discussion';}
+  else { const e=m.exec; pill = e===1?'<span class="pill p-ink">Executing</span>': e===2?'<span class="pill p-ink">Verifying</span>': e===3?'<span class="pill p-indigo">Unknown</span>':'<span class="pill p-green">Done · verified</span>'; sub = e===1?'Approved 08:12 · sending once':e===2?'Sent · confirming with Emirates':e===3?'Emirates didn\u2019t confirm the outcome':'Ticket issued and verified 08:19'; }
+  // preparation timeline
+  const prep = STAGES.map((st,i)=>{
+    const cls = m.phase!=='prep' || i<m.stageIx ? 'done' : i===m.stageIx ? 'active' : 'future';
+    let detail='';
+    if(cls==='done'){ detail=[ 'Travel · Legal · Finance · 07:41 – 07:49', 'Reopened pass 1: no Wednesday option, aisle seat forgotten', 'Pass 2 · Legal added visa fact · Travel added Wed 30 Sep and the seat request', 'Triggered: amount threshold · covered' ][i]; }
+    else if(cls==='active'){ detail=`${x.next} · <span class="eta" data-live="eta">${x.eta}</span>`+(st.kind==='unk'?`<div class="sub">Waiting for the Legal Expert to confirm the fare rule. reAI can\u2019t estimate this reliably, so no time is shown.</div>`:''); }
+    else detail = 'Expected next';
+    const label = cls==='active' ? `<span data-live="stage">${x.stage}</span>` : st.label;
+    return `<div class="st ${cls}"><div class="n"><i></i></div><div class="b"><b>${label}</b><span>${detail}</span></div></div>`;
+  }).join('');
+  const readySt = `<div class="st ${m.phase==='prep'?'future':m.phase==='ready'?'active':'done'}"><div class="n"><i></i></div><div class="b"><b>Ready to discuss</b><span>${m.phase==='prep'?'Expected next':'Shared conversation opened · you + Wolf + Master Concierge'}</span></div></div>`;
+  const decSt = m.decided?`<div class="st done"><div class="n"><i></i></div><div class="b"><b>Your decision</b><span>EK141 · Thursday · 08:09</span></div></div>`:'';
+  let prepSt='';
+  if(m.decided){ const q=m.prep; const px=prepText();
+    prepSt=PREP.map((st,i)=>{const cls=q.done||i<q.ix?'done':i===q.ix?'active':'future'; const det=cls==='done'?['Master Concierge coordinates Travel and Treasury · cannot change your decision','Exact payload built: EK141 · Thu 1 Oct · Business Flex · passenger, passport, bags','Position unchanged · covered · 08:14'][i]:cls==='active'?`${px.next} · <span class="eta" data-prep="eta">${px.eta}</span>`:'Expected next'; return `<div class="st ${cls}"><div class="n"><i></i></div><div class="b"><b>${cls==='active'?`<span data-prep="stage">${px.stage}</span>`:st.label}</b><span>${det}</span></div></div>`}).join('');
+    prepSt+=`<div class="st ${m.approved?'done':q.done?'active':'future'}"><div class="n"><i></i></div><div class="b"><b>Seal ready · your authorization</b><span>${m.approved?'Authorized 08:12':q.done?'Nothing is sent until you authorize':'Expected next'}</span></div></div>`; }
+  let exec='';
+  if(m.phase==='exec'){ const e=m.exec;
+    exec+=`<div class="st done"><div class="n"><i></i></div><div class="b"><b>Approved</b><span>08:12 · by you · payload A7F3·C21E</span></div></div>`;
+    exec+=`<div class="st ${e>=2?'done':'active'}"><div class="n"><i></i></div><div class="b"><b>Executing</b><span>${e>=2?'Sent to Emirates once · payment authorised':'Re-checking every fact, then sending once · <span class="eta">~1 min</span>'}</span></div></div>`;
+    exec+=`<div class="st ${e>=4?'done':e>=2?'active':'future'}"><div class="n"><i></i></div><div class="b"><b>Verifying</b><span>${e===2?'Confirming the ticket with Emirates · <span class="eta">~3 min</span>':e===3?'Emirates hasn\u2019t answered · not retrying':e>=4?'Verified 08:19 · ticket 176-[TICKET NO.]':'Expected next'}</span></div></div>`;
+    if(e===3) exec+=`<div class="card" style="border-style:dashed;border-color:var(--indigo)"><h5><span class="pill p-indigo">Unknown</span><span style="font-family:var(--mono);font-weight:500;text-transform:none;letter-spacing:0">since 08:15</span></h5>
+      <div class="kv"><span class="k">We know</span><span class="v">Request sent 08:14 · payment authorised · no charge yet on Visa 4417</span></div>
+      <div class="kv"><span class="k">Don\u2019t know</span><span class="v">Whether the ticket was issued</span></div>
+      <div class="kv"><span class="k">reAI is</span><span class="v">Verifying with Emirates · not sending again — a second request could book twice</span></div>
+      <div class="kv"><span class="k">You</span><span class="v"><b>Nothing.</b> If still unknown at 09:00, you\u2019ll get one question.</span></div>
+      <div class="evid">08:14 sent · 08:15 timeout · 08:20 portal: slow · 08:25 next check</div></div>`;
+    if(e>=4) exec+=`<div class="st done"><div class="n"><i></i></div><div class="b"><b>Done · verified</b><span>Ticket issued and verified with Emirates at 08:19 · independent re-check · fare, name and dates match what you approved</span></div></div>`;
+  }
+  const demo = m.phase==='prep' ? `<div class="demo"><small>Demo control · not product UI</small><button onclick="S.madrid.ready=true;S.madrid.phase='ready';S.madrid.stageIx=STAGES.length;render()">Skip to ready</button></div>`
+    : m.phase==='ready' ? `<div class="demo"><small>Demo control · not product UI</small>${m.decided&&!m.prep.done?`<button onclick="S.madrid.prep={ix:2,t:99,done:true};render()">Skip to Seal ready</button>`:''}${m.decided&&m.prep.done?`<button onclick="openSeal('ek141')">Open the Seal</button>`:`<button onclick="go('shared-madrid')">Open discussion</button>`}</div>`
+    : `<div class="demo"><small>Demo control · not product UI</small>${m.exec<4?`<button onclick="S.madrid.exec++;render()">Advance</button>`:''}<button onclick="S.madrid.exec=3;render()">Show UNKNOWN</button><button onclick="S.madrid.exec=4;render()">Show DONE</button></div>`;
+  return chead('Outcome','Madrid trip · 1–4 Oct',IDM.wolf+IDM.conc)+`<div class="thread"><div class="ohead" style="padding:0">
+    ${m.phase==='exec'&&m.exec>=4?'<div class="big">✓</div>':''}${pill}<h2>${m.phase==='exec'&&m.exec>=4?'EK141 is booked.':'Madrid trip'}</h2><div class="sub">${sub}</div>
+    <div class="roles" style="font-size:12.5px;color:var(--sec);margin-top:8px;line-height:1.45">Planned with Mr. Wolf · orchestrated by Master Concierge · Treasury checked · carried out by travel booking (Duffel)</div></div>
+    ${m.phase==='prep'?`<div class="paper live" style="margin-top:14px"><div class="h"><b>Now</b><span class="eta" data-live="eta">${x.eta}</span></div><div class="stage" data-live="stage">${x.stage}</div><div class="bar"><i data-live="bar" style="width:${progress()}%"></i></div><div class="next"><b data-live="next">${x.next}</b></div></div>`:''}
+    <div class="sec"><h4>How this is being prepared</h4><div class="tl">${prep}${readySt}${decSt}${prepSt}${exec}</div></div>
+    <div class="sec"><h4>Deeper</h4><div class="paper list"><div class="li" onclick="toast('Level 3: engine lifecycle, agent contracts, evidence log')"><span class="v">How this happened · agents, contracts, evidence ›</span></div></div></div>
+    ${demo}</div>`;
+}
+
+/* ================= ACTIVITY ================= */
+function activity(){
+  const m=S.madrid; const x=stageText();
+  const live=`<div class="paper">
+    <div class="row" onclick="go('outcome-madrid')"><span class="pill p-indigo">Unknown</span><div class="t"><b>Seat 7K on EK141</b><span>Emirates didn\u2019t confirm · nothing for you before 13:00</span></div><span class="chev">›</span></div>
+    <div class="row" onclick="go('outcome-madrid')">${m.phase==='exec'?(m.exec>=4?'<span class="pill p-green">Done</span>':m.exec===3?'<span class="pill p-indigo">Unknown</span>':'<span class="pill p-ink">Executing</span>'):'<span class="pill p-blue">Working</span>'}<div class="t"><b>Madrid trip · 1–4 Oct</b><span data-live="stage">${m.phase==='exec'?'Approved 08:12 · not done until verified':x.stage}</span></div><span class="chev">›</span></div>
+    <div class="row" onclick="go('shared-pay')"><span class="pill ${S.pay.decided?'p-stone':'p-blue'}">${S.pay.decided?'Waiting':'Working'}</span><div class="t"><b>Al Noor payment · AED 18,400</b><span>${S.pay.decided?'Verifying bank details by phone · payment not prepared':'Ready to discuss · reviewed by Mr. Wolf · Treasury checked'}</span></div><span class="chev">›</span></div>
+    <div class="row" onclick="toast('Notes for the 16:00 investor call · draft ready by 15:00')"><span class="pill p-blue">Working</span><div class="t"><b>Investor call notes</b><span>Draft ready by 15:00 · nothing leaves the system</span></div><span class="chev">›</span></div>
+    <div class="row" onclick="toast('Waiting for the garage')"><span class="pill p-stone">Waiting</span><div class="t"><b>Car service</b><span>Garage promised a reply by 12:00</span></div><span class="chev">›</span></div>
+    <div class="row" onclick="toast('Starts after the lease review')"><span class="pill p-stone">Queued</span><div class="t"><b>Q3 VAT document pack</b><span>Starts after the lease review</span></div><span class="chev">›</span></div></div>`;
+  const hist=`<div class="paper">
+    <div class="row"><span class="pill p-green">Done</span><div class="t"><b>Hotel Urso · 1–4 Oct</b><span>Verified with the provider 07:12 · provider confirmation</span></div></div>
+    <div class="row"><span class="pill p-green">Done</span><div class="t"><b>6 receipts filed to the Vault</b><span>Internal · files re-read in place</span></div></div>
+    <div class="row"><span class="pill p-green">Done</span><div class="t"><b>Dinner table · 19:30 tonight</b><span>Confirmation matched · approved by you yesterday</span></div></div>
+    <div class="row"><span class="pill p-red">Failed</span><div class="t"><b>Fare check · Air France</b><span>Provider timed out · read-only · nothing moved · safe to re-run</span></div></div>
+    <div class="row"><span class="pill p-stone">Rejected</span><div class="t"><b>Qatar via Doha · Wed</b><span>Rejected by you yesterday 21:04 · nothing booked</span></div></div></div>`;
+  return `${topBar()}<div class="scroll" style="padding-bottom:40px"><div style="font-family:var(--serif);font-size:32px;margin:18px 0 4px">Activity</div><div style="font-size:13px;color:var(--sec)">Every outcome, where it stands, and what proves it.</div>
+    <div class="segs"><button aria-pressed="${S.actSeg==='live'}" onclick="S.actSeg='live';render()">Live</button><button aria-pressed="${S.actSeg==='hist'}" onclick="S.actSeg='hist';render()">History</button></div>
+    ${S.actSeg==='live'?live:hist}
+    <div style="margin-top:16px"><button class="btn b-out sm" onclick="go('home')">Back to home</button></div></div>`;
+}
+
+/* ================= render ================= */
+function render(){
+  const sc=$('#screen'); sc.classList.toggle('night',S.theme==='night');
+  const v=$('#view'); let html='';
+  switch(S.screen){
+    case 'home': html=home(); break;
+    case 'wolf': html=wolf(); break;
+    case 'conc': html=conc(); break;
+    case 'shared-pay': html=sharedPay(); break;
+    case 'shared-madrid': html=sharedMadrid(); break;
+    case 'decision': html=decision(); break;
+    case 'outcome-madrid': html=outcomeMadrid(); break;
+    case 'activity': html=activity(); break;
+    default: html=home();
+  }
+  if(S.seal) html+=seal();
+  v.innerHTML=html;
+  liveUpdate();
+}
+render();
+</script>
+</body>
+</html>
